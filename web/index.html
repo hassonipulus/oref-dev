@@ -815,10 +815,17 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
 
   function recordHistory(name, title, alertDate, state) {
     if (!locationHistory[name]) locationHistory[name] = [];
+    // Skip entries older than 12 hours
+    if (alertDate) {
+      var ts = new Date(alertDate.replace(' ', 'T')).getTime();
+      if (!isNaN(ts) && Date.now() - ts > 12 * 60 * 60 * 1000) return;
+    }
     var arr = locationHistory[name];
-    // Avoid consecutive duplicates with the same title
-    var last = arr[arr.length - 1];
-    if (last && last.title === title) return;
+    // Dedup by normalized alertDate + title
+    var normDate = (alertDate || '').replace('T', ' ');
+    for (var i = 0; i < arr.length; i++) {
+      if ((arr[i].alertDate || '').replace('T', ' ') === normDate && arr[i].title === title) return;
+    }
     arr.push({ title: title, alertDate: alertDate, state: state });
     // Refresh popup if it's open for this location
     if (openPopupName === name && openPopupMarker) {
@@ -1085,6 +1092,7 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
           if (!ts) continue;
           if (rid) extendedRids.add(rid);
           extendedHistory.push({ location: location, title: title, alertDate: ts, state: state });
+          recordHistory(location, title, e.alertDate || '', state);
         }
         // Sort ascending by time
         extendedHistory.sort(function(a, b) { return a.alertDate - b.alertDate; });
