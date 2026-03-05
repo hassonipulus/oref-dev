@@ -882,7 +882,7 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
 
   function buildPopupHtml(name) {
     var entries = (locationHistory[name] || []).slice()
-      .sort(function(a, b) { return (b.alertDate || '').localeCompare(a.alertDate || ''); });
+      .sort(function(a, b) { return (b.alertDate || '').replace('T', ' ').localeCompare((a.alertDate || '').replace('T', ' ')); });
     var rows = entries.map(function(e, i) {
       var color = COLORS[e.state] || '#888';
       var label = displayLabel(e.title);
