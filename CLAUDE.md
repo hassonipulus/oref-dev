@@ -56,8 +56,9 @@ Do **not** use `cat`/`category` for classification — the same number is reused
 | `ניתן לצאת מהמרחב המוגן` | Can leave shelter | 🟢 Green (fades) |
 | `ניתן לצאת מהמרחב המוגן אך יש להישאר בקרבתו` | Can leave but stay close (wartime baseline) | 🟢 Green (fades) |
 | `חדירת מחבלים - החשש הוסר` | Terrorist threat removed | 🟢 Green (fades) |
+| `השוהים במרחב המוגן יכולים לצאת...` | Shelter occupants can exit | 🟢 Green (fades) |
 
-- Green titles are matched by substring (`האירוע הסתיים`, `ניתן לצאת`, `החשש הוסר`) to catch variants.
+- Green titles are matched by substring (`האירוע הסתיים`, `ניתן לצאת`, `החשש הוסר`, `יכולים לצאת`) to catch variants.
 - API sometimes uses double spaces in titles — normalize with `.replace(/\s+/g, ' ')` before matching.
 - Unknown titles default to Red and log a console warning.
 

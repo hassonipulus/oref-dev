@@ -764,6 +764,7 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
     if (title.includes('האירוע הסתיים') ||
         title.includes('ניתן לצאת') ||
         title.includes('החשש הוסר') ||
+        title.includes('יכולים לצאת') ||
         title === 'עדכון') {
       return 'green';
     }
@@ -872,12 +873,19 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
     'ניתן לצאת מהמרחב המוגן': 'ניתן לצאת מהמרחב המוגן',
     'ניתן לצאת מהמרחב המוגן אך יש להישאר בקרבתו': 'ניתן לצאת מהמרחב המוגן',
     'חדירת מחבלים - החשש הוסר': 'חדירת מחבלים - החשש הוסר',
+    'השוהים במרחב המוגן יכולים לצאת': 'ניתן לצאת מהמרחב המוגן',
+    'האירוע הסתיים': 'האירוע הסתיים',
     'עדכון': 'ניתן לצאת מהמרחב המוגן',
   };
 
   function displayLabel(title) {
     var norm = (title || '').replace(/\s+/g, ' ').trim();
-    return TITLE_LABELS[norm] || ('\u26A0 ' + norm);
+    if (TITLE_LABELS[norm]) return TITLE_LABELS[norm];
+    var keys = Object.keys(TITLE_LABELS);
+    for (var i = 0; i < keys.length; i++) {
+      if (norm.includes(keys[i])) return TITLE_LABELS[keys[i]];
+    }
+    return '\u26A0 ' + norm;
   }
 
   function buildPopupHtml(name) {
