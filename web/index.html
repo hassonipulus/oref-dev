@@ -992,6 +992,7 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
       .then(function(text) {
         text = stripBom(text).trim();
         liveErrors = 0;
+        try { sessionStorage.setItem('oref-last-poll', String(Date.now())); } catch(e) {}
         if (isLiveMode && historyErrors <= 3) updateLiveStatus();
         if (!text) return; // no active alert
         var alert = JSON.parse(text);
@@ -1467,6 +1468,19 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
     if (item) {
       selectSoundLocation(item.getAttribute('data-name'));
     }
+  });
+
+  // --- Mobile resume: reload if data is stale ---
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState !== 'visible') return;
+    try {
+      var lastPoll = Number(sessionStorage.getItem('oref-last-poll')) || 0;
+      if (Date.now() - lastPoll < 30000) return;
+      var lastReload = Number(sessionStorage.getItem('oref-reload-ts')) || 0;
+      if (Date.now() - lastReload < 60000) return; // prevent reload loop
+      sessionStorage.setItem('oref-reload-ts', String(Date.now()));
+    } catch(e) { return; }
+    location.reload();
   });
 
   init();
