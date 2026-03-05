@@ -20,7 +20,7 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; font-family: Arial, sans-serif; }
-#map { width: 100%; height: 100%; }
+#map { width: 100%; height: 100%; direction: ltr; }
 .leaflet-interactive:hover { fill-opacity: 0.7 !important; stroke-opacity: 1 !important; }
 
 #legend {
@@ -454,6 +454,7 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
 
   // --- Colors ---
   var COLORS = { red: '#ff0000', orange: '#ff8800', yellow: '#ffcc00', green: '#00cc00' };
+  var BASE_STYLE = { fillColor: '#888', fillOpacity: 0.01, color: '#888', opacity: 0 };
 
   // --- Sound ---
   function getAudioContext() {
@@ -690,10 +691,12 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
         continue;
       }
       var polygon = L.polygon(latlngs, {
-        fillOpacity: 0,
+        fillColor: '#888',
+        fillOpacity: 0.01,
+        color: '#888',
         opacity: 0,
         weight: 1,
-        interactive: false
+        interactive: true
       }).addTo(map);
       polygon.bindTooltip(cityNames[i], { direction: 'top' });
       (function(name, poly) {
@@ -718,9 +721,6 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
       for (var i = 0; i < cityPolygons.length; i++) {
         if (cityPolygons[i]) {
           cityPolygons[i].setStyle({ fillOpacity: 0.05 });
-          cityPolygons[i].options.interactive = true;
-          var el = cityPolygons[i].getElement();
-          if (el) el.classList.add('leaflet-interactive');
         }
       }
     }
@@ -790,12 +790,6 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
       opacity: opacity + 0.2,
       weight: 1
     });
-    if (!polygon.options.interactive) {
-      polygon.options.interactive = true;
-      var el = polygon.getElement();
-      if (el) el.classList.add('leaflet-interactive');
-    }
-
     locationStates[name] = {
       state: state,
       since: since || Date.now(),
@@ -808,10 +802,7 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
   function removeLocation(name) {
     var entry = locationStates[name];
     if (entry && entry.marker) {
-      entry.marker.setStyle({ fillOpacity: 0, opacity: 0 });
-      entry.marker.options.interactive = false;
-      var el = entry.marker.getElement();
-      if (el) el.classList.remove('leaflet-interactive');
+      entry.marker.setStyle(BASE_STYLE);
       entry.marker.closePopup();
     }
     delete locationStates[name];
@@ -1109,10 +1100,7 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
     for (var name in locationStates) {
       var entry = locationStates[name];
       if (entry && entry.marker) {
-        entry.marker.setStyle({ fillOpacity: 0, opacity: 0 });
-        entry.marker.options.interactive = false;
-        var el = entry.marker.getElement();
-        if (el) el.classList.remove('leaflet-interactive');
+        entry.marker.setStyle(BASE_STYLE);
         entry.marker.closePopup();
       }
     }
@@ -1150,11 +1138,6 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
         opacity: opacity + 0.2,
         weight: 1
       });
-      if (!polygon.options.interactive) {
-        polygon.options.interactive = true;
-        var el = polygon.getElement();
-        if (el) el.classList.add('leaflet-interactive');
-      }
       locationStates[loc] = { state: s, since: Date.now(), marker: polygon };
     }
   }
