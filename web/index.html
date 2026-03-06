@@ -164,42 +164,45 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
   position: fixed;
   bottom: 24px;
   left: 24px;
-  width: 40px;
   height: 40px;
+  width: auto;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  direction: ltr;
   background: rgba(255,255,255,0.92);
   border: none;
   border-radius: 8px;
-  font-size: 22px;
-  line-height: 40px;
-  text-align: center;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   z-index: 1000;
-  padding: 0;
 }
 #sound-btn:hover { background: #f0f0f0; }
 
 #timeline-btn {
   display: none;
   position: fixed;
-  bottom: 24px;
-  left: 72px;
-  width: 40px;
+  bottom: 72px;
+  left: 24px;
   height: 40px;
+  width: auto;
+  padding: 0 12px;
+  align-items: center;
+  gap: 6px;
+  direction: ltr;
   background: rgba(255,255,255,0.92);
   border: none;
   border-radius: 8px;
-  font-size: 20px;
-  line-height: 40px;
-  text-align: center;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   z-index: 1000;
-  padding: 0;
 }
-#timeline-btn.has-data { display: block; }
+#timeline-btn.has-data { display: flex; }
 #timeline-btn:hover { background: #f0f0f0; }
 #timeline-btn.active { background: #e0e0e0; }
+.btn-icon { font-size: 18px; line-height: 1; flex-shrink: 0; }
+.btn-text { font-size: 13px; font-weight: 500; white-space: nowrap; }
 
 #test-danger-btn {
   display: none;
@@ -336,19 +339,19 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
   #sound-btn {
     bottom: 12px;
     left: 12px;
-    width: 36px;
     height: 36px;
-    font-size: 20px;
-    line-height: 36px;
+    padding: 0 10px;
+    gap: 5px;
   }
   #timeline-btn {
-    bottom: 12px;
-    left: 56px;
-    width: 36px;
+    bottom: 56px;
+    left: 12px;
     height: 36px;
-    font-size: 18px;
-    line-height: 36px;
+    padding: 0 10px;
+    gap: 5px;
   }
+  .btn-icon { font-size: 16px; }
+  .btn-text { font-size: 12px; }
   #test-danger-btn {
     bottom: 12px;
     left: 100px;
@@ -418,8 +421,8 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
   </div>
 </div>
 
-<button id="sound-btn" title="השמעת צלילים">🔇</button>
-<button id="timeline-btn" title="ציר זמן">&#128339;</button>
+<button id="sound-btn" title="השמעת צלילים"><span class="btn-icon">🔇</span><span class="btn-text">ללא התראה קולית</span></button>
+<button id="timeline-btn" title="ציר זמן"><span class="btn-icon">🕓</span><span class="btn-text">התראות קודמות</span></button>
 <button id="test-danger-btn" title="בדיקת צליל סכנה">🚨</button>
 <button id="test-all-clear-btn" title="בדיקת צליל רגיעה">✅</button>
 
@@ -1504,7 +1507,10 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
   var soundResults = document.getElementById('sound-results');
 
   function updateSoundButton() {
-    soundBtn.textContent = soundMuted ? '\uD83D\uDD07' : '\uD83D\uDD0A';
+    var icon = soundMuted ? '\uD83D\uDD07' : '\uD83D\uDD0A';
+    var text = soundMuted ? 'ללא התראה קולית' : (soundLocation === 'all' ? 'צליל מופעל' : soundLocation);
+    soundBtn.querySelector('.btn-icon').textContent = icon;
+    soundBtn.querySelector('.btn-text').textContent = text;
     soundBtn.title = soundMuted ? 'השמעת צלילים' : 'צלילים: ' + (soundLocation === 'all' ? 'כל הארץ' : soundLocation);
   }
   updateSoundButton();
