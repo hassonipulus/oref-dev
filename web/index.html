@@ -1292,6 +1292,7 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
     function openTimeline() {
       bar.classList.add('open');
       toggleBtn.classList.add('active');
+      timelineMax = Math.max(timelineMax, Date.now());
       slider.value = 999;
       enterHistoryMode(timelineMax);
     }
