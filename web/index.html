@@ -974,10 +974,20 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
       timelineMax = Math.max(timelineMax, since, Date.now());
     }
 
+    // Skip expired green markers — don't briefly flash old all-clears on page load
+    var expired = state === 'green' && (Date.now() - since) >= GREEN_FADE_MS;
     if (isLiveMode) {
-      setLocationState(location, state, since);
+      if (expired) {
+        if (locationStates[location]) removeLocation(location);
+      } else {
+        setLocationState(location, state, since);
+      }
     } else if (liveLocationStates) {
-      updateShadowState(location, state, since);
+      if (expired) {
+        delete liveLocationStates[location];
+      } else {
+        updateShadowState(location, state, since);
+      }
     }
   }
 
@@ -1251,6 +1261,7 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
     if (liveLocationStates) {
       for (var name in liveLocationStates) {
         var s = liveLocationStates[name];
+        if (s.state === 'green' && (Date.now() - s.since) >= GREEN_FADE_MS) continue;
         setLocationState(name, s.state, s.since);
       }
     }
