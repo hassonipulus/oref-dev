@@ -655,7 +655,8 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
     [35.44603, 33.09163], [35.50320, 33.08974], [35.50240, 33.11551],
     [35.51995, 33.11618], [35.53139, 33.13385], [35.52559, 33.13925],
     [35.54186, 33.19911], [35.53654, 33.20867], [35.53686, 33.23225], [35.54637, 33.23724],
-    [35.54604, 33.25502], [35.55578, 33.25828], [35.55697, 33.26459], [35.56477, 33.27526], [35.56420, 33.28823], [35.56815, 33.29096], [35.58474, 33.28200], [35.59597, 33.26616],
+    [35.54604, 33.25502], [35.55578, 33.25828], [35.55697, 33.26459], [35.56477, 33.27526], [35.56420, 33.28823], [35.56815, 33.29096], [35.58474, 33.28200],
+    [35.583, 33.266], // גבעת קורח
     [35.750, 33.300], // Mt Dov
     [35.820, 33.340], // Hermon / NE corner
     [35.92, 33.34],   // Golan NE
@@ -771,6 +772,21 @@ html, body { height: 100%; font-family: Arial, sans-serif; }
         color: '#0000ff', fillOpacity: 0, weight: 2, dashArray: '6 4',
         interactive: false
       }).addTo(map);
+      var borderIcon = L.divIcon({
+        className: '',
+        html: '<div style="width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid #00f;box-sizing:border-box;"></div>',
+        iconSize: [10, 10],
+        iconAnchor: [5, 5]
+      });
+      borderLatLngs.forEach(function(ll) {
+        var marker = L.marker(ll, { icon: borderIcon, draggable: true }).addTo(map);
+        marker.bindPopup(ll[0].toFixed(6) + ', ' + ll[1].toFixed(6));
+        marker.on('dragend', function() {
+          var pos = marker.getLatLng();
+          marker.setPopupContent(pos.lat.toFixed(6) + ', ' + pos.lng.toFixed(6));
+          marker.openPopup();
+        });
+      });
       // Force all cell outlines visible via CSS (survives setStyle from alerts)
       var debugStyle = document.createElement('style');
       debugStyle.textContent = '.leaflet-overlay-pane path { stroke: #555 !important; stroke-opacity: 1 !important; stroke-width: 1 !important; }';
