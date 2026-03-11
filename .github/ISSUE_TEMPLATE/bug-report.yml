@@ -2,6 +2,9 @@ name: "דיווח על באג"
 description: "משהו לא עובד כמו שצריך? ספרו בבקשה"
 labels: ["bug"]
 body:
+  - type: markdown
+    attributes:
+      value: "כתבו כותרת קצרה בשדה למעלה, ופרטו כאן למטה."
   - type: textarea
     id: description
     attributes:

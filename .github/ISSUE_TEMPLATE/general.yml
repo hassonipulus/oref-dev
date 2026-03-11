@@ -2,6 +2,9 @@ name: "פנייה כללית"
 description: "שאלה, הצעה, או כל דבר אחר"
 labels: ["question"]
 body:
+  - type: markdown
+    attributes:
+      value: "כתבו כותרת קצרה בשדה למעלה, ופרטו כאן למטה."
   - type: textarea
     id: details
     attributes:
