@@ -285,6 +285,9 @@ body.has-overlay .leaflet-interactive { pointer-events: none !important; }
 }
 .btn-icon { font-size: 18px; line-height: 1; flex-shrink: 0; }
 .btn-text { font-size: 13px; font-weight: 500; white-space: nowrap; }
+.tl-close { display: none; font-size: 16px; cursor: pointer; color: #888; margin-right: auto; }
+.tl-close:hover { color: #333; }
+#timeline-btn.open .tl-close { display: inline; }
 
 #test-danger-btn {
   display: none;
@@ -523,7 +526,7 @@ body.has-overlay .leaflet-interactive { pointer-events: none !important; }
 </div>
 <div id="timeline-btn" title="ציר זמן">
   <div id="timeline-btn-row">
-    <span class="btn-icon">🕓</span><span class="btn-text">התרעות קודמות</span>
+    <span class="btn-icon">🕓</span><span class="btn-text">התרעות קודמות</span><span class="tl-close">✕</span>
   </div>
   <div id="timeline-controls">
     <div id="timeline-slider-wrap">
