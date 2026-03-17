@@ -21,7 +21,7 @@ export async function onRequestGet(context) {
   const toCache = new Response(response.body, {
     headers: {
       'Content-Type': 'application/json',
-      'Cache-Control': 'public, max-age=60',
+      'Cache-Control': 'public, max-age=3600',
     },
   });
 
