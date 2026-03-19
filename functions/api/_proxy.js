@@ -5,7 +5,7 @@ const OREF_HEADERS = {
 
 const PROXY_HOSTS = [
   'https://oreftest.kon40.com',
-  'https://proxy2.oref-proxy2.workers.dev',
+  'https://proxy1.oref-proxy2.workers.dev',
   'https://proxy3.oref-proxy3.workers.dev',
 ];
 
