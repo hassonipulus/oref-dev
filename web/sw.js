@@ -1,6 +1,5 @@
 var CACHE_NAME = 'oref-map-v1';
 var SHELL_URLS = [
-  '/',
   '/mixkit-clear-announce-tones-2861.wav'
 ];
 
