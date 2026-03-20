@@ -16,7 +16,8 @@ For each date from WAR_START to yesterday:
 Identical dates are skipped silently.
 
 Usage:
-    uv run tools/backfill_history.py
+    uv run tools/backfill_history.py            # WAR_START..yesterday, interactive
+    uv run tools/backfill_history.py --today     # merge today first (no prompt), then interactive
 """
 
 import asyncio
@@ -24,7 +25,8 @@ import json
 import subprocess
 import sys
 import tempfile
-from datetime import date, timedelta
+import time
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from urllib.parse import quote
 
@@ -132,8 +134,19 @@ def wrangler_put_empty(key: str) -> bool:
     return True
 
 
+def merge_entries(backfill: list[dict], remote: list[dict]) -> list[dict]:
+    """Union of both entry sets by rid, sorted by alertDate."""
+    by_rid = {e["rid"]: e for e in remote}
+    for e in backfill:
+        by_rid.setdefault(e["rid"], e)
+    return sorted(by_rid.values(), key=lambda e: e["alertDate"])
+
+
 async def main() -> None:
+    t0 = time.monotonic()
+    update_today = "--today" in sys.argv
     yesterday = (date.today() - timedelta(days=1)).isoformat()
+    today_str = date.today().isoformat()
 
     all_dates = []
     d = date.fromisoformat(WAR_START)
@@ -143,6 +156,8 @@ async def main() -> None:
         d += timedelta(days=1)
 
     print(f"Date range: {all_dates[0]} .. {all_dates[-1]} ({len(all_dates)} dates)")
+    if update_today:
+        print(f"--today: will also merge {today_str} (no prompt)")
     COMPARE_DIR.mkdir(parents=True, exist_ok=True)
 
     async with aiohttp.ClientSession() as session:
@@ -178,7 +193,64 @@ async def main() -> None:
     total = sum(len(v) for v in by_date.values())
     print(f"  {total} unique entries across {len(by_date)} dates")
 
-    # Compare each date against remote
+    # --today: merge today's data immediately (no prompt)
+    if update_today:
+        # Cutoff = last completed cron window end. Cron window ends at :03, :18, :33, :48.
+        now = datetime.now()
+        cutoff_minutes = [3, 18, 33, 48]
+        candidates = [m for m in cutoff_minutes if m <= now.minute]
+        if candidates:
+            cutoff_time = now.replace(minute=max(candidates), second=0, microsecond=0)
+        else:
+            cutoff_time = (now - timedelta(hours=1)).replace(minute=48, second=0, microsecond=0)
+        cutoff_str = cutoff_time.strftime("%Y-%m-%dT%H:%M:%S")
+        print(f"\nCutoff: {cutoff_str} (entries after this left to cron)")
+
+        all_today = sorted(by_date.get(today_str, []), key=lambda e: e["alertDate"])
+        backfill_entries = [e for e in all_today if e["alertDate"] < cutoff_str]
+        skipped = len(all_today) - len(backfill_entries)
+        if skipped:
+            print(f"  filtered: {len(backfill_entries)} entries before cutoff, {skipped} skipped")
+
+        remote_path = COMPARE_DIR / f"{today_str}.remote.jsonl"
+        print(f"{today_str} (today): downloading remote...", end=" ", flush=True)
+        remote_entries = download_remote(today_str, remote_path)
+        print(f"remote={len(remote_entries)}, backfill={len(backfill_entries)}")
+
+        merged = merge_entries(backfill_entries, remote_entries)
+        remote_rids = {e["rid"] for e in remote_entries}
+        backfill_rids = {e["rid"] for e in backfill_entries}
+        added = len(backfill_rids - remote_rids)
+        kept = len(remote_rids - backfill_rids)
+        print(f"  merged={len(merged)} (added {added} from backfill, kept {kept} remote-only)")
+
+        if added > 0:
+            elapsed = time.monotonic() - t0
+            print(f"  Uploading {today_str}.jsonl... (elapsed: {elapsed:.0f}s)")
+            if wrangler_put(f"{today_str}.jsonl", to_jsonl(merged).encode("utf-8"), "application/jsonl"):
+                upload_time = datetime.now()
+                upload_str = upload_time.strftime("%H:%M:%S")
+                # Next cron fires at the next :03/:18/:33/:48
+                cron_minutes = [3, 18, 33, 48]
+                next_crons = [m for m in cron_minutes if m > upload_time.minute]
+                if next_crons:
+                    next_cron = upload_time.replace(minute=next_crons[0], second=0, microsecond=0)
+                else:
+                    next_cron = (upload_time + timedelta(hours=1)).replace(minute=3, second=0, microsecond=0)
+                margin = (next_cron - upload_time).total_seconds() / 60
+
+                print(f"\n  --- Today summary ---")
+                print(f"  Cutoff:          {cutoff_str}")
+                print(f"  Upload completed: {upload_str}")
+                print(f"  Total duration:  {elapsed:.0f}s")
+                print(f"  Next cron:       {next_cron.strftime('%H:%M')}")
+                print(f"  Margin:          {margin:.1f} min {'OK' if margin >= 2 else 'TIGHT!'}")
+            else:
+                print(f"  FAILED", file=sys.stderr)
+        else:
+            print("  no new entries to add, skipping upload")
+
+    # Compare each past date against remote
     to_upload: list[tuple[str, list]] = []
 
     for day in all_dates:

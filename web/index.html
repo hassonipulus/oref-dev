@@ -390,6 +390,7 @@ body.has-overlay .leaflet-interactive { pointer-events: none !important; }
   position: relative;
   width: 100%;
   order: 0;
+  padding-bottom: 6px;
 }
 #timeline-ticks {
   position: relative;
@@ -442,7 +443,38 @@ body.has-overlay .leaflet-interactive { pointer-events: none !important; }
   font-weight: bold;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+}
+#timeline-date-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  direction: ltr;
   order: 1;
+}
+#timeline-date-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+#timeline-date-nav button {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 10px;
+  line-height: 1;
+  color: #333;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#timeline-date-nav button:hover { background: #eee; }
+#timeline-date-nav button:disabled { opacity: 0.3; cursor: default; }
+#timeline-date-nav button:disabled:hover { background: none; }
+#tl-date-label {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 @media (max-width: 480px) {
@@ -500,6 +532,8 @@ body.has-overlay .leaflet-interactive { pointer-events: none !important; }
     gap: 5px;
   }
   #timeline-transport button { font-size: 16px; padding: 4px 10px; }
+  #timeline-date-nav button { font-size: 13px; padding: 2px 8px; }
+  #tl-date-label { font-size: 13px; }
   .btn-icon { font-size: 16px; }
   .btn-text { font-size: 12px; }
   #test-danger-btn {
@@ -593,7 +627,14 @@ body.has-overlay .leaflet-interactive { pointer-events: none !important; }
         <div id="timeline-ticks"></div>
         <input type="range" id="timeline-slider" min="0" max="999" value="999" step="1">
       </div>
-      <span id="timeline-label"></span>
+      <div id="timeline-date-row">
+        <span id="timeline-label"></span>
+        <div id="timeline-date-nav">
+          <button id="tl-date-prev" title="יום קודם">&#9664;</button>
+          <span id="tl-date-label"></span>
+          <button id="tl-date-next" title="יום הבא">&#9654;</button>
+        </div>
+      </div>
       <div id="timeline-transport">
         <button id="tl-prev" title="אירוע קודם">⏮</button>
         <button id="tl-play" title="נגן/עצור">▶</button>
@@ -813,6 +854,28 @@ body.has-overlay .leaflet-interactive { pointer-events: none !important; }
   var polygonHintTargets = null;  // targets being pulsed by showPolygonHint
   var closeTimelinePanel = function() {}; // set by initTimeline
   var openTimelineToLastEvent = function() {}; // set by initTimeline
+  var rebuildTimelineFn = function() {}; // set by initTimeline
+  var timelineDate = null;         // 'YYYY-MM-DD' string, null = today
+  var dayHistoryReady = false;     // true once day-history fetch completes
+  var historyPollId = null;        // setInterval ID for fetchHistory
+  var DAY_HISTORY_MIN_DATE = '2026-02-28';
+
+  function todayDateStr() {
+    return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jerusalem' }).format(new Date());
+  }
+  function isViewingToday() {
+    return !timelineDate || timelineDate === todayDateStr();
+  }
+  function formatDateLabel(dateStr) {
+    var parts = dateStr.split('-');
+    if (dateStr === todayDateStr()) return '\u05D4\u05D9\u05D5\u05DD (' + parts[2] + '/' + parts[1] + ')';
+    return parts[2] + '/' + parts[1] + '/' + parts[0];
+  }
+  function addDays(dateStr, n) {
+    var d = new Date(dateStr + 'T12:00:00');
+    d.setDate(d.getDate() + n);
+    return d.toISOString().slice(0, 10);
+  }
 
   // --- Panel history (mobile back button closes panels) ---
   var panelHistoryPushed = false;
@@ -1715,24 +1778,36 @@ body.has-overlay .leaflet-interactive { pointer-events: none !important; }
 
   // --- Extended history (timeline) ---
   function fetchExtendedHistory(onDone) {
-    apiFetch('alarms-history')
+    var dateParam = timelineDate || todayDateStr();
+    fetch('/api/day-history?date=' + dateParam)
       .then(function(resp) {
+        if (resp.status === 404) {
+          console.log('No day-history data for', dateParam);
+          dayHistoryReady = true;
+          if (onDone) onDone();
+          return;
+        }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         return resp.json();
       })
       .then(function(entries) {
-        if (!Array.isArray(entries)) { if (onDone) onDone(); return; }
+        if (!entries) return; // 404 case already handled
+        if (!Array.isArray(entries)) { dayHistoryReady = true; if (onDone) onDone(); return; }
         for (var i = 0; i < entries.length; i++) {
           var e = entries[i];
           if (!e.data || !e.category_desc) continue;
           var rid = String(e.rid || '');
-          if (rid && extendedRids.has(rid)) continue;
           var title = (e.category_desc || '').replace(/\s+/g, ' ').trim();
           var state = classifyTitle(title);
           var location = (typeof e.data === 'string' ? e.data : String(e.data)).trim();
           var ts = parseAlertDate(e.alertDate);
           if (!ts) continue;
+          // Dedup by rid AND composite key
+          var compositeKey = location + '|' + (e.alertDate || '');
+          if (rid && extendedRids.has(rid)) continue;
+          if (extendedRids.has(compositeKey)) continue;
           if (rid) extendedRids.add(rid);
+          extendedRids.add(compositeKey);
           extendedHistory.push({ location: location, title: title, alertDate: ts, state: state });
           recordHistory(location, title, e.alertDate || '', state);
         }
@@ -1740,13 +1815,17 @@ body.has-overlay .leaflet-interactive { pointer-events: none !important; }
         extendedHistory.sort(function(a, b) { return a.alertDate - b.alertDate; });
         if (extendedHistory.length > 0) {
           timelineMin = extendedHistory[0].alertDate;
-          timelineMax = Math.max(extendedHistory[extendedHistory.length - 1].alertDate, Date.now());
+          timelineMax = isViewingToday()
+            ? Math.max(extendedHistory[extendedHistory.length - 1].alertDate, Date.now())
+            : extendedHistory[extendedHistory.length - 1].alertDate;
         }
-        console.log('Extended history:', extendedHistory.length, 'entries');
+        console.log('Day history (' + dateParam + '):', extendedHistory.length, 'entries');
+        dayHistoryReady = true;
         if (onDone) onDone();
       })
       .catch(function(err) {
-        console.error('Extended history fetch error:', err);
+        console.error('Day history fetch error:', err);
+        dayHistoryReady = true;
         if (onDone) onDone();
       });
   }
@@ -1874,13 +1953,87 @@ body.has-overlay .leaflet-interactive { pointer-events: none !important; }
     var nextBtn = document.getElementById('tl-next');
     var ticksEl = document.getElementById('timeline-ticks');
 
-    if (extendedHistory.length === 0) return;
+    var datePrevBtn = document.getElementById('tl-date-prev');
+    var dateNextBtn = document.getElementById('tl-date-next');
+    var dateLabel = document.getElementById('tl-date-label');
+
+    var onDayHistoryReady = null; // callback when day-history fetch completes
 
     container.classList.add('has-data');
 
     var TICK_COLORS = { red: '#e74c3c', purple: '#9b59b6', yellow: '#f1c40f', green: '#2ecc71' };
     var PLAY_SPEED = 600;
 
+    function updateDateNav() {
+      var d = timelineDate || todayDateStr();
+      dateLabel.textContent = formatDateLabel(d);
+      datePrevBtn.disabled = (d <= DAY_HISTORY_MIN_DATE);
+      dateNextBtn.disabled = isViewingToday();
+    }
+    updateDateNav();
+
+    function rebuildTimeline(seekMode) {
+      // seekMode: 'last' (default) = last event, 'first' = first event
+      if (extendedHistory.length > 0) {
+        if (isViewingToday()) timelineMax = Math.max(timelineMax, Date.now());
+        renderTicks();
+        if (eventPeaks.length > 0) {
+          if (seekMode === 'first') {
+            seekTo(eventPeaks[0]);
+          } else {
+            seekTo(eventPeaks[eventPeaks.length - 1]);
+          }
+        } else {
+          slider.value = 999;
+          enterHistoryMode(timelineMax);
+        }
+        label.style.opacity = '';
+      } else {
+        ticksEl.innerHTML = '';
+        label.textContent = '\u05D0\u05D9\u05DF \u05E0\u05EA\u05D5\u05E0\u05D9\u05DD';
+        label.style.opacity = '0.5';
+        slider.value = 999;
+      }
+    }
+
+    rebuildTimelineFn = function() {
+      if (isOpen()) rebuildTimeline();
+    };
+
+    function switchDate(newDate) {
+      dayHistoryReady = false;
+      extendedHistory = [];
+      extendedRids = new Set();
+      locationHistory = {};
+      timelineMin = 0;
+      timelineMax = 0;
+      stopPlay();
+      timelineDate = (newDate === todayDateStr()) ? null : newDate;
+      updateDateNav();
+      label.textContent = '\u05D8\u05D5\u05E2\u05DF...';
+      label.style.opacity = '0.5';
+      ticksEl.innerHTML = '';
+
+      if (isViewingToday()) {
+        // Restart history polling
+        if (!historyPollId) {
+          historyPollId = setInterval(function() { fetchHistory(); }, HISTORY_POLL_MS);
+        }
+        fetchHistory();
+        fetchExtendedHistory(function() {
+          rebuildTimeline('first');
+        });
+      } else {
+        // Stop history polling for past dates
+        if (historyPollId) {
+          clearInterval(historyPollId);
+          historyPollId = null;
+        }
+        fetchExtendedHistory(function() {
+          rebuildTimeline('first');
+        });
+      }
+    }
 
     // --- Open / Close ---
     function isOpen() { return container.classList.contains('open'); }
@@ -1890,13 +2043,16 @@ body.has-overlay .leaflet-interactive { pointer-events: none !important; }
       map.closePopup();
       container.classList.add('open');
       pushPanelHistory();
-      timelineMax = Math.max(timelineMax, Date.now());
-      renderTicks();
-      if (eventPeaks.length > 0) {
-        seekTo(biggestEventPeak());
+      updateDateNav();
+      if (!dayHistoryReady) {
+        label.textContent = '\u05D8\u05D5\u05E2\u05DF...';
+        label.style.opacity = '0.5';
+        onDayHistoryReady = function() {
+          onDayHistoryReady = null;
+          rebuildTimeline();
+        };
       } else {
-        slider.value = 999;
-        enterHistoryMode(timelineMax);
+        rebuildTimeline();
       }
       updateOverlay();
     }
@@ -1909,10 +2065,38 @@ body.has-overlay .leaflet-interactive { pointer-events: none !important; }
       isZoomingProgrammatically = true;
       map.flyTo(DEFAULT_CENTER, DEFAULT_ZOOM, { duration: 0.7 });
       isZoomedToEvent = false;
+
+      // If viewing a past date, reset to today
+      if (!isViewingToday()) {
+        timelineDate = null;
+        extendedHistory = [];
+        extendedRids = new Set();
+        locationHistory = {};
+        timelineMin = 0;
+        timelineMax = 0;
+        dayHistoryReady = false;
+        updateDateNav();
+        // Restart history polling
+        if (!historyPollId) {
+          historyPollId = setInterval(function() { fetchHistory(); }, HISTORY_POLL_MS);
+        }
+        fetchHistory();
+        fetchExtendedHistory(function() {
+          // Data ready for next open
+        });
+      }
+
       enterLiveMode();
       updateOverlay();
     }
     closeTimelinePanel = closeTimeline;
+
+    // Called when dayHistoryReady becomes true (from fetchExtendedHistory callback in init)
+    rebuildTimelineFn = function() {
+      if (onDayHistoryReady) {
+        onDayHistoryReady();
+      }
+    };
 
     openTimelineToLastEvent = function() {
       if (extendedHistory.length === 0) return;
@@ -1922,6 +2106,21 @@ body.has-overlay .leaflet-interactive { pointer-events: none !important; }
       if (eventPeaks.length > 0) seekTo(eventPeaks[eventPeaks.length - 1]);
       else seekTo(timelineMax);
     };
+
+    // --- Date nav buttons ---
+    datePrevBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var cur = timelineDate || todayDateStr();
+      if (cur <= DAY_HISTORY_MIN_DATE) return;
+      switchDate(addDays(cur, -1));
+    });
+
+    dateNextBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (isViewingToday()) return;
+      var cur = timelineDate || todayDateStr();
+      switchDate(addDays(cur, 1));
+    });
 
     btnRow.addEventListener('click', function(e) {
       if (isOpen()) {
@@ -1977,10 +2176,12 @@ body.has-overlay .leaflet-interactive { pointer-events: none !important; }
       currentViewTime = time;
       var timeStr = formatTime(time);
       label.textContent = timeStr;
+      label.style.opacity = '';
+      var datePart = isViewingToday() ? '' : ' (' + formatDateLabel(timelineDate) + ')';
       document.getElementById('historyTimeLabel').style.display = 'block';
-      document.getElementById('historyTimeLabel').textContent = 'מראה התרעות משעה ' + timeStr;
+      document.getElementById('historyTimeLabel').textContent = '\u05DE\u05E8\u05D0\u05D4 \u05D4\u05EA\u05E8\u05E2\u05D5\u05EA \u05DE\u05E9\u05E2\u05D4 ' + timeStr + datePart;
       reconstructStateAt(time);
-      }
+    }
 
     function seekTo(time) {
       time = clampTime(time);
@@ -2052,14 +2253,6 @@ body.has-overlay .leaflet-interactive { pointer-events: none !important; }
       return bounds;
     }
 
-    function biggestEventPeak() {
-      if (eventPeaks.length === 0 || eventPeakSizes.length === 0) return timelineMax;
-      var bestIdx = 0;
-      for (var i = 1; i < eventPeakSizes.length; i++) {
-        if (eventPeakSizes[i] >= eventPeakSizes[bestIdx]) bestIdx = i;
-      }
-      return eventPeaks[bestIdx];
-    }
 
     function renderTicks() {
       ticksEl.innerHTML = '';
@@ -2208,7 +2401,8 @@ body.has-overlay .leaflet-interactive { pointer-events: none !important; }
         currentViewTime = newTime;
         var timeStr = formatTime(newTime);
         label.textContent = timeStr;
-        document.getElementById('historyTimeLabel').textContent = 'מראה התרעות משעה ' + timeStr;
+        var datePart = isViewingToday() ? '' : ' (' + formatDateLabel(timelineDate) + ')';
+        document.getElementById('historyTimeLabel').textContent = '\u05DE\u05E8\u05D0\u05D4 \u05D4\u05EA\u05E8\u05E2\u05D5\u05EA \u05DE\u05E9\u05E2\u05D4 ' + timeStr + datePart;
         reconstructStateAt(newTime);
 
         // Auto-zoom: fly to event area when entering a new event group
@@ -2275,22 +2469,10 @@ body.has-overlay .leaflet-interactive { pointer-events: none !important; }
       buildPolygons(data);
 
       var isDebug2 = location.search.indexOf('debug2') !== -1;
-      var historyDone = false, extendedDone = false;
-      function onBothDone() {
-        if (!historyDone || !extendedDone) return;
-        initialized = true;
-        initTimeline();
-        if (!isDebug2) {
-          setInterval(fetchLiveAlerts, LIVE_POLL_MS);
-          setInterval(function() { fetchHistory(); }, HISTORY_POLL_MS);
-          setInterval(fadeGreenMarkers, FADE_TICK_MS);
-          fetchLiveAlerts();
-          updateLiveStatus();
-        } else if (extendedHistory.length > 0) {
-          reconstructStateAt(timelineMax);
-        }
-        if ('ontouchstart' in window) setTimeout(showPolygonHint, 500);
-      }
+
+      // Init timeline immediately (button always visible)
+      initTimeline();
+
       if (isDebug2) {
         isLiveMode = false;
         fetch('interesting-map.json')
@@ -2317,16 +2499,34 @@ body.has-overlay .leaflet-interactive { pointer-events: none !important; }
                 timelineMax = extendedHistory[extendedHistory.length - 1].alertDate;
               }
             }
-            historyDone = true; extendedDone = true; onBothDone();
+            initialized = true;
+            dayHistoryReady = true;
+            rebuildTimelineFn();
+            if (extendedHistory.length > 0) reconstructStateAt(timelineMax);
           })
           .catch(function(err) {
             console.error('debug2: failed to load interesting-map.json:', err);
-            historyDone = true; extendedDone = true; onBothDone();
+            initialized = true;
+            dayHistoryReady = true;
           });
       } else {
-        fetchHistory(function() { historyDone = true; onBothDone(); });
-        fetchExtendedHistory(function() { extendedDone = true; onBothDone(); });
+        // Start live + history polling immediately
+        setInterval(fetchLiveAlerts, LIVE_POLL_MS);
+        historyPollId = setInterval(function() { fetchHistory(); }, HISTORY_POLL_MS);
+        setInterval(fadeGreenMarkers, FADE_TICK_MS);
+        fetchLiveAlerts();
+        updateLiveStatus();
+
+        // Fetch live history first, then day-history in background
+        fetchHistory(function() {
+          initialized = true;
+          fetchExtendedHistory(function() {
+            rebuildTimelineFn();
+          });
+        });
       }
+
+      if ('ontouchstart' in window) setTimeout(showPolygonHint, 500);
     }).catch(function(err) {
       console.error('Failed to load geo data:', err);
       setStatus('err', 'אירעה שגיאה בטעינת נתונים גאוגרפיים');
