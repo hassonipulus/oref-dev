@@ -1,5 +1,6 @@
 import express from 'express';
-import { readFileSync, appendFileSync } from 'fs';
+import { readFileSync } from 'fs';
+import { appendFile } from 'fs/promises';
 
 const PORT = 3001;
 const DEBUG = process.argv.includes('--debug');
@@ -79,22 +80,34 @@ async function fetchOref(url) {
 
 // --- Polling ---
 
+let alertsInFlight = null;
+
 async function pollAlerts() {
-  try {
-    cache.alerts.body = await fetchOref(ALERTS_URL);
+  if (alertsInFlight) return alertsInFlight;
+  alertsInFlight = fetchOref(ALERTS_URL).then(body => {
+    cache.alerts.body = body;
     cache.alerts.updatedAt = Date.now();
-  } catch (err) {
+  }).catch(err => {
     console.error('[alerts] poll error:', err.message);
-  }
+  }).finally(() => {
+    alertsInFlight = null;
+  });
+  return alertsInFlight;
 }
 
+let historyInFlight = null;
+
 async function pollHistory() {
-  try {
-    cache.history.body = await fetchOref(HISTORY_URL);
+  if (historyInFlight) return historyInFlight;
+  historyInFlight = fetchOref(HISTORY_URL).then(body => {
+    cache.history.body = body;
     cache.history.updatedAt = Date.now();
-  } catch (err) {
+  }).catch(err => {
     console.error('[history] poll error:', err.message);
-  }
+  }).finally(() => {
+    historyInFlight = null;
+  });
+  return historyInFlight;
 }
 
 let extendedInFlight = null;
@@ -130,13 +143,15 @@ let currentMinute = null;
 setInterval(() => {
   const now = new Date();
   const minute = now.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:MM"
+  let line = '';
   if (minute !== currentMinute) {
     const prefix = currentMinute === null ? '' : '\n';
-    appendFileSync(USAGE_LOG, `${prefix}${minute} `);
+    line += `${prefix}${minute} `;
     currentMinute = minute;
   }
-  appendFileSync(USAGE_LOG, `${requestCount}, `);
+  line += `${requestCount}, `;
   requestCount = 0;
+  appendFile(USAGE_LOG, line).catch(err => console.error('[usage] log error:', err.message));
 }, 2000);
 
 app.get(['/api/alerts', '/api2/alerts'], (req, res) => {
