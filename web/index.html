@@ -797,6 +797,8 @@ body.idle #right-panel {
     var menuGps = document.getElementById('menu-gps');
     var gpsLabel = menuGps.querySelector('.menu-item-label');
     if (!navigator.geolocation) { menuGps.style.display = 'none'; return; }
+    var LOCATION_PREF_KEY = 'oref-show-user-location';
+    var LOCATION_HIDDEN_KEY = 'oref-location-hidden';
 
     var icon = L.divIcon({
       html: '<span style="display:block;width:14px;height:14px;background:#4285F4;border:3px solid #fff;border-radius:50%;box-shadow:0 0 6px rgba(66,133,244,0.6);"></span>',
@@ -807,6 +809,25 @@ body.idle #right-panel {
 
     var watchId = null;
     var transientTimeout = null;
+
+    function shouldRestoreUserLocation() {
+      try {
+        var stored = localStorage.getItem(LOCATION_PREF_KEY);
+        if (stored === 'true') return true;
+        if (stored === 'false') return false;
+        return localStorage.getItem(LOCATION_HIDDEN_KEY) !== 'true';
+      } catch (e) {
+        return true;
+      }
+    }
+
+    function saveUserLocationPreference(enabled) {
+      try {
+        localStorage.setItem(LOCATION_PREF_KEY, enabled ? 'true' : 'false');
+        if (enabled) localStorage.removeItem(LOCATION_HIDDEN_KEY);
+        else localStorage.setItem(LOCATION_HIDDEN_KEY, 'true');
+      } catch (e) {}
+    }
 
     function setIdle() {
       gpsLabel.textContent = 'הראה אותי';
@@ -871,12 +892,21 @@ body.idle #right-panel {
       }, { enableHighAccuracy: false, maximumAge: 30000 });
     }
 
-    if (navigator.permissions) {
-      navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
-        if (result.state === 'granted' && localStorage.getItem('oref-location-hidden') !== 'true') {
-          startWatching();
-        }
-      }).catch(function() {});
+    if (shouldRestoreUserLocation()) {
+      var urlPos = getUrlPosition();
+      if (urlPos) {
+        showUserLocation(urlPos);
+      } else if (navigator.permissions) {
+        navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
+          if (result.state !== 'denied' && shouldRestoreUserLocation()) {
+            startWatching();
+          }
+        }).catch(function() {
+          if (shouldRestoreUserLocation()) startWatching();
+        });
+      } else {
+        startWatching();
+      }
     }
 
     menuGps.querySelector('.menu-item-row').addEventListener('click', function() {
@@ -884,18 +914,18 @@ body.idle #right-panel {
         stopWatching();
         showToast('מיקום הוסר מהמפה');
         setIdle();
-        localStorage.setItem('oref-location-hidden', 'true');
+        saveUserLocationPreference(false);
       } else {
         var urlPos = getUrlPosition();
         if (urlPos) {
-          localStorage.removeItem('oref-location-hidden');
+          saveUserLocationPreference(true);
           showUserLocation(urlPos);
           return;
         }
         if (transientTimeout) { clearTimeout(transientTimeout); transientTimeout = null; }
         gpsLabel.textContent = 'מאתר...';
         startWatching();
-        localStorage.removeItem('oref-location-hidden');
+        saveUserLocationPreference(true);
       }
     });
   }
