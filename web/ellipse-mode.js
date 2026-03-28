@@ -12,6 +12,7 @@
   var showToast = function() {};
 
   function createController() {
+    var MIN_ELLIPSE_CLUSTER_SIZE = 20;
 
     var orefPoints = null;
     var orefPointsPromise = null;
@@ -506,6 +507,10 @@
       return cluster[0].location + ' +' + (cluster.length - 1);
     }
 
+    function shouldSkipCluster(cluster) {
+      return !cluster || cluster.length < MIN_ELLIPSE_CLUSTER_SIZE;
+    }
+
     function addEllipseOverlay(points, alerts) {
       if (!points.length) return;
 
@@ -726,6 +731,8 @@
 
       for (var i = 0; i < clusters.length; i++) {
         var cluster = clusters[i];
+        if (shouldSkipCluster(cluster)) continue;
+
         var placedPoints = [];
         var latestAlertDate = '';
 
@@ -759,6 +766,7 @@
 
       var missing = [];
       var clusters = buildRedAlertClusters(redAlerts);
+      var renderedClusterCount = 0;
       var icon = L.divIcon({
         className: 'ellipse-pin',
         html: '<div style="width:9px;height:9px;background:transparent;border:1px solid #fff;border-radius:50%;box-shadow:0 1px 6px rgba(0,0,0,0.4);box-sizing:border-box;"></div>',
@@ -767,6 +775,8 @@
       });
 
       for (var c = 0; c < clusters.length; c++) {
+        if (shouldSkipCluster(clusters[c])) continue;
+
         var placedPoints = [];
         for (var i = 0; i < clusters[c].length; i++) {
           var alert = clusters[c][i];
@@ -786,8 +796,9 @@
           placedPoints.push({ lat: point[0], lng: point[1] });
         }
         addEllipseOverlay(placedPoints, clusters[c]);
+        renderedClusterCount += 1;
       }
-      return { missing: missing, clusterCount: clusters.length };
+      return { missing: missing, clusterCount: renderedClusterCount };
     }
 
     function buildClusterGeometrySummaries(redAlerts, pointsMap, userLatLng) {
