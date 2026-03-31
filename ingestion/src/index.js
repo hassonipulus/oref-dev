@@ -103,7 +103,8 @@ export default {
       );
       const text = (await resp.text()).replace(/^\ufeff/, '');
       entries = JSON.parse(text);
-      console.log(`Fetched ${entries.length} entries from API`);
+      const dates = entries.map(e => e.alertDate).filter(Boolean).sort();
+      console.log(`Fetched ${entries.length} entries from API, range: ${dates[0] || 'n/a'} – ${dates[dates.length - 1] || 'n/a'}`);
     } catch (e) {
       console.error(`Fetch failed: ${e.message}`);
       ctx.waitUntil(sendPushover(
