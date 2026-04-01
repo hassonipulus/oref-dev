@@ -21,6 +21,14 @@ All endpoints are **geo-blocked** — non-Israeli IPs receive HTTP 403.
 | `/districts/citiesNotes_{lang}.json` | Per-city notes |
 | `/translations/dictionary.{lang}.json` | General UI translation dictionary |
 
+## City name character encoding
+
+City names containing apostrophes use ASCII characters: single quote `'` (U+0027) and double quote `''` for gershayim. Examples: `ג'לג'וליה`, `ייט''ב`.
+
+In late March 2026, the oref API briefly switched to Hebrew typographic characters: geresh `׳` (U+05F3) and gershayim `״` (U+05F4). This broke city lookups in both the backfill script (`city_0` filter) and the client's geocoding (names didn't match `cities_geo.json`). The change was reverted within days — the API returned to ASCII apostrophes.
+
+**Defensive code**: `normalizeGeresh()` in `web/index.html` converts Hebrew geresh/gershayim back to ASCII at all ingestion points. Currently a no-op, but protects against a future recurrence. The backfill script queries both ASCII and Hebrew character variants for cities with apostrophes.
+
 ## alerts-history.oref.org.il
 
 | URL | Purpose |

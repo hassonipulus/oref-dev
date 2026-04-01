@@ -11,7 +11,7 @@ A static single-page web app showing live Pikud HaOref (Home Front Command) aler
 - **API proxy (tier 1)**: Cloudflare Pages Functions (`functions/api/`) — serves TLV users directly, redirects others
 - **API proxy (tier 2)**: Cloudflare Worker (`worker/`) with placement `region = "azure:israelcentral"` — fallback for non-TLV users
 - **History storage**: Cloudflare R2 bucket (`oref-history`) with per-day JSONL files
-- **Ingestion**: Cloudflare Worker with cron trigger (`ingestion/`) — appends to R2 every 15 minutes
+- **Ingestion**: Cloudflare Worker with cron trigger (`ingestion/`) — appends to R2 every 2 minutes with multi-attempt per 15-min window
 - **No frameworks**: Vanilla JS, CSS
 
 ## Data Sources
@@ -159,12 +159,12 @@ The original timeline fetched the extended history API (`/api/alarms-history`) o
 
 ## History Storage
 
-The Oref extended history API only exposes the latest ~3,000 entries (~1–2 hours during active days). To preserve the full record, alerts are ingested into R2 every 15 minutes and served by date.
+The Oref extended history API only exposes the latest ~3,000 entries (~1–2 hours during active days). To preserve the full record, alerts are ingested into R2 every 2 minutes (with multi-attempt per 15-minute window) and served by date.
 
 ### Architecture
 
 ```
-  every 15 min (cron)
+  every 2 min (cron, multi-attempt per 15-min window)
   [Ingestion Worker] ──fetch──> [proxy1 Worker] ──fetch──> [oref API]
                                 (placement: israelcentral,
                                  different CF account)
@@ -202,35 +202,48 @@ For an empty file this produces `'[]'` — valid JSON.
 
 ### Ingestion worker (`ingestion/`)
 
-A Cloudflare Worker with a cron trigger every 15 minutes (at `:03`, `:18`, `:33`, `:48`).
+A Cloudflare Worker with a cron trigger every 2 minutes (`1/2 * * * *`, odd minutes: :01, :03, ..., :59).
 
-**Time window logic**: Each run ingests a fixed 15-minute quarter-hour block, determined by wall clock time (Israel time). The cron fires 3 minutes after each quarter ends, giving the API time to populate entries:
+**Multi-attempt design**: Each 15-minute window gets ~6 fetch attempts (one every 2 min) plus a final alert-check. This replaced the previous single-shot-per-window design, which silently missed entries during heavy salvos (March 28-30 incident).
 
-| Actual minute (Israel) | Window ingested |
-|---|---|
-| :01–:13 | [XX:45, XX+1:00) |
-| :17–:28 | [XX:00, XX:15) |
-| :32–:43 | [XX:15, XX:30) |
-| :47–:58 | [XX:30, XX:45) |
-| :14–:16, :29–:31, :44–:46, :59–:00 | **Dead zone** — skip |
+**Timeslot markers**: An R2 object `meta/<timeslot>` (e.g., `meta/2026-03-28T14:15`) tracks whether a window has been processed. Once a timeslot is marked, subsequent cron runs skip it immediately (single `head()` call). Markers older than 2 hours are cleaned up on alert-check runs.
 
-If the worker runs in a dead zone (ambiguous timing between two cron points), it logs and exits without processing. This handles cron drift safely.
+**Time window logic**: Each run ingests a fixed 15-minute quarter-hour block, determined by `event.scheduledTime` (Israel time):
 
-**Israel time conversion**: `alertDate` values from the API are in Israel time. Window bounds (UTC timestamps) are converted using `Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jerusalem' })` for string comparison.
+| Scheduled minute (Israel) | Window ingested | Role |
+|---|---|---|
+| :01–:11 | [XX:45, XX+1:00) | Fetch attempts |
+| :13 | [XX:45, XX+1:00) | **Alert check** |
+| :15 | Dead zone | — |
+| :17–:25 | [XX:00, XX:15) | Fetch attempts |
+| :27 | [XX:00, XX:15) | **Alert check** |
+| :29, :31 | Dead zone | — |
+| :33–:41 | [XX:15, XX:30) | Fetch attempts |
+| :43 | [XX:15, XX:30) | **Alert check** |
+| :45 | Dead zone | — |
+| :47–:55 | [XX:30, XX:45) | Fetch attempts |
+| :57 | [XX:30, XX:45) | **Alert check** |
+| :59 | Dead zone | — |
+
+**Alert-check runs** (at :13, :27, :43, :57) do NOT fetch — they only check if the marker exists. If not, a Pushover notification is sent ("missed window"). This separation ensures notifications fire even if the fetch path is broken (CPU/memory crash, proxy down). Alert-check runs also clean up old markers.
+
+**Israel time conversion**: `alertDate` values from the API are in Israel time. Window bounds are converted using `Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jerusalem' })` for string comparison.
 
 **R2 date key**: Events are grouped by `r2DateKey(alertDate)` — events with hour ≥ 23 go to the next day's file (see [Storage format](#storage-format)).
 
-**Processing**:
-1. Fetch from proxy1 Worker (`/api2/alarms-history`) — see [why proxy1](#why-proxy1-not-history-proxy) below
-2. Strip BOM, parse JSON (~3,000 entries, ~50KB)
-3. Filter to entries within the time window
-4. Map to 4 fields: `{ data, alertDate, category_desc, rid }`
-5. Sort by `alertDate`, group by R2 date key (events 23:xx → next day's file)
-6. For each date: read existing `.jsonl` from R2, append new entries, write back
+**Processing** (fetch attempts only):
+1. Check R2 marker — if exists, skip (already processed)
+2. Single `fetch()` to proxy1 Worker (`/api2/alarms-history`) — no in-process retries; cron cadence provides retries
+3. Strip BOM, parse JSON (~3,000 entries, ~50KB)
+4. Filter to entries within the time window
+5. Map to 4 fields: `{ data, alertDate, category_desc, rid }`
+6. Sort by `alertDate`, group by R2 date key (events 23:xx → next day's file)
+7. For each date: read existing `.jsonl` from R2, append new entries, write back
+8. Write timeslot marker to R2
 
-**Observability**: `[observability] enabled = true` in wrangler.toml persists logs to the Cloudflare dashboard. Console logs include window boundaries, entry counts, and R2 write details for each cron run.
+**Observability**: `[observability] enabled = true` in wrangler.toml persists logs to the Cloudflare dashboard. Console logs include timeslot, window boundaries, entry counts, R2 write details, marker status, and cleanup counts.
 
-**Error handling**: On fetch failure after 3 retries (delays: 5s, 15s, 45s), sends a Pushover notification and aborts. R2 write failures and CPU limit crashes are **not** notified — check dashboard logs.
+**Error handling**: On fetch failure, the run exits silently — the next cron fires 2 minutes later. If all attempts fail, the alert-check sends a Pushover notification. R2 write failures and CPU limit crashes are **not** notified — check dashboard logs.
 
 ### Day-history API (`functions/api/day-history.js`)
 
