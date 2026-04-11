@@ -10,8 +10,8 @@ hour and last 24 hours. The client polls this endpoint once per minute.
 
 ## Stack
 
-- **Map**: Leaflet.js (v1.9.4) + OpenStreetMap tiles
-- **Voronoi**: d3-delaunay (v6) for polygon computation, polygon-clipping (v0.15) for clipping to Israel border
+- **Map**: MapLibre GL JS + PMTiles (self-hosted Middle East extract on Cloudflare R2, Protomaps basemap with Hebrew labels)
+- **Polygons**: Pre-computed GeoJSON in `web/locations_polygons.json` loaded at startup into a MapLibre `alerts-source`
 - **API proxy (tier 1)**: Cloudflare Pages Functions (`functions/api/`) — serves TLV users directly, redirects others
 - **API proxy (tier 2)**: Cloudflare Worker (`worker/`) with placement `region = "azure:israelcentral"` — fallback for non-TLV users
 - **History storage**: Cloudflare R2 bucket (`oref-history`) with per-day JSONL files
@@ -115,13 +115,83 @@ Unknown titles default to red and log a console warning.
 
 ## Map Rendering
 
-### Voronoi Polygons
+### Polygons
 
-All ~1,430 location coordinates from `cities_geo.json` are tessellated at startup using d3-delaunay into Voronoi cells. Cells are clipped to Israel's border polygon using polygon-clipping. Each location owns one polygon cell.
+Location polygons are pre-computed offline and shipped as `web/locations_polygons.json`. On startup the page fetches this file and loads all ~1,450 features into the MapLibre `alerts-source` GeoJSON source. Each feature's `fillColor`, `fillOpacity`, `lineColor`, and `lineOpacity` properties are updated in place via `setData()` whenever alert state changes — no layer recreation needed.
 
-- Computed once at startup, not on every alert update.
-- Only fill color and opacity change per alert event.
 - Adjacent polygons of the same color visually merge into contiguous threat zones (shared borders become invisible due to matching stroke color).
+- Per-feature state is driven by data properties, not Leaflet `setStyle`.
+- The `featureMap` lookup (`name → GeoJSON Feature`) is exposed on `AppState` for use by extensions (e.g. ellipse mode).
+
+### Basemap Tiles (PMTiles on R2)
+
+The basemap is a self-hosted Protomaps vector tile file stored on Cloudflare R2 and served via the R2 public bucket URL:
+
+```text
+https://pub-0cb002f302e94002b76aa0bc30eb8763.r2.dev/middle-east.pmtiles
+```
+
+**Current file coverage:**
+
+| Property | Value |
+|----------|-------|
+| File | `middle-east.pmtiles` |
+| Bounds (lng) | 22.0 – 73.0 |
+| Bounds (lat) | 3.0 – 50.0 |
+| Zoom | 0 – 10 |
+| Built | 2026-04-11 (pmtiles extract, OSM data 2026-04-09) |
+
+This covers Israel, Lebanon, Syria, Jordan, Iraq, Iran, Saudi Arabia, Egypt, Libya (east), the Gulf states, Yemen, Horn of Africa, Turkey, the Caucasus, and Pakistan border.
+
+#### Inspecting the current file
+
+```bash
+npx pmtiles show https://pub-0cb002f302e94002b76aa0bc30eb8763.r2.dev/middle-east.pmtiles
+```
+
+#### Regenerating with a larger bounding box
+
+The current file was generated with **Planetiler** (v0.10.1, run locally). For future updates the recommended approach is the `pmtiles` CLI, which uses HTTP range requests to extract only the needed tiles from Protomaps' hosted planet — no 120 GB download required.
+
+**Option A — `pmtiles extract` CLI (recommended for one-off changes):**
+
+Install: `brew install protomaps/homebrew-go-pmtiles/go-pmtiles`
+
+Find a recent build date at https://maps.protomaps.com/builds/, then run:
+```bash
+pmtiles extract https://build.protomaps.com/20260409.pmtiles middle-east.pmtiles \
+  --bbox=22,3,73,50 --maxzoom=10 --download-threads=4
+```
+bbox format: `MIN_LON,MIN_LAT,MAX_LON,MAX_LAT`. Replace the date with the one from the builds index. The command fetches only the tiles in the bbox via HTTP range requests (a few GB, not 120 GB).
+
+> **Do not use `slice.openstreetmap.us`** — that site downloads raw `.osm.pbf` data (OSM XML/binary), not `.pmtiles`.
+
+**Option B — Planetiler (best for full control or custom schemas):**
+```bash
+java -jar planetiler.jar \
+  --download \
+  --area=middle-east \
+  --bounds=22,3,73,50 \
+  --output=middle-east-extended.pmtiles
+```
+
+Both produce the same `protomaps` basemap schema — the map code works identically with either output.
+
+2. **Upload to R2** using Wrangler (bucket name visible in Cloudflare dashboard → R2):
+   ```bash
+   wrangler r2 object put <bucket-name>/middle-east.pmtiles \
+     --file=middle-east.pmtiles \
+     --content-type=application/vnd.mapbox-vector-tile
+   ```
+   The public URL (`pub-0cb002...r2.dev`) does not change after upload.
+
+3. **Update `maxBounds` in `web/index.html`** to match the new lat extent (e.g. `[[32.0, 10.0], [65.0, 42.0]]` for Yemen coverage).
+
+#### R2 bucket info
+
+- **Public URL**: `https://pub-0cb002f302e94002b76aa0bc30eb8763.r2.dev/`
+- **Public access**: enabled — the client fetches tiles directly from R2 at runtime via the `pmtiles://` protocol, no Worker involved.
+- Bucket name is visible in Cloudflare dashboard → R2.
 
 ### Geocoding
 
@@ -137,7 +207,7 @@ All ~1,430 location coordinates from `cities_geo.json` are tessellated at startu
 - **Legend**: Bottom-right — color key
 - **Timeline panel**: Bottom-center — date navigation + slider to scrub through any day's history
 - **About modal**: Triggered by ⓘ button or title click. Closes on backdrop click or Escape.
-- **Popups**: Click a polygon to see alert history for that location (newest first).
+- **Location panel**: Click a polygon to open a slide-in panel with alert history for that location (bottom-sheet on mobile, sidebar on desktop).
 
 All overlays use `position: fixed`, `z-index: 1000`, semi-transparent white backgrounds with `border-radius` and `box-shadow`. RTL layout throughout.
 
@@ -167,7 +237,7 @@ The Oref extended history API only exposes the latest ~3,000 entries (~1–2 hou
 
 ### Architecture
 
-```
+```text
   every 2 min (cron, multi-attempt per 15-min window)
   [Ingestion Worker] ──fetch──> [proxy1 Worker] ──fetch──> [oref API]
                                 (placement: israelcentral,
@@ -191,7 +261,7 @@ Each day file covers events from `(D-1)T23:00` to `DT22:59` (Israel time). Event
 
 Each entry occupies one line ending with `,\n`:
 
-```
+```json
 {"data":"חיפה","alertDate":"2026-03-15T14:23:00","category_desc":"ירי רקטות וטילים","rid":495134},
 {"data":"תל אביב","alertDate":"2026-03-15T14:23:01","category_desc":"ירי רקטות וטילים","rid":495135},
 ```
