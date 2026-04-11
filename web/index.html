@@ -4076,7 +4076,10 @@ body.idle #right-panel {
         historyPollId = setInterval(function() { fetchHistory(); }, HISTORY_POLL_MS);
         setInterval(fadeGreenMarkers, FADE_TICK_MS);
         fetchLiveAlerts();
-        fetchHistory(function() { initialized = true; });
+        fetchHistory(function() {
+          initialized = true;
+          if (shouldAutoZoomToEvents() && !selectedLocation) maybeZoomToEvent();
+        });
         fetchExtendedHistory(function() { rebuildTimelineFn(); });
         if ('ontouchstart' in window) setTimeout(showPolygonHint, 500);
       });
