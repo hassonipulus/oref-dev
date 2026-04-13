@@ -4,7 +4,7 @@ const OREF_HEADERS = {
 };
 
 const NON_TLV_PROXY_HOSTS = [
-  'https://proxy2.xanagis.workers.dev/',
+  'https://orefproxy5.oref-map.org',
   //  'https://orefproxy6.oref-map.org',
   // 'https://orefproxy7.oref-map.org',
 ];
@@ -12,7 +12,7 @@ const NON_TLV_PROXY_HOSTS = [
 // Dedicated pool for TLV traffic so Israeli edge load can be isolated from the
 // general non-TLV proxy pool.
 const TLV_PROXY_HOSTS = [
-  'https://proxy2.xanagis.workers.dev/',
+  'https://orefproxy5.oref-map.org',
   //  'https://oreftest.kon40.com',
   //  'https://orefproxy6.oref-map.org',
 ];
