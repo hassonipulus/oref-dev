@@ -1176,29 +1176,36 @@ var PROXY_BASE = 'https://oref-proxy.xanagis.workers.dev';
 var apiPrefix = '/api'; 
 
 function apiFetch(endpoint) {
-    // Construct the URL to your own server
     var url = PROXY_BASE + apiPrefix + '/' + endpoint;
     
-    // Maintain the debug flag feature
     if (typeof FF !== 'undefined' && FF.debugapi) {
         url += '?debugapi=' + encodeURIComponent(FF.debugapi);
+    }
+
+    // A helper to create a valid, empty mock response
+    function createEmptyResponse() {
+        return new Response("[]", {
+            status: 200,
+            headers: new Headers({
+                'Content-Type': 'application/json;charset=utf-8'
+            })
+        });
     }
 
     return fetch(url)
         .then(function(resp) {
             if (!resp.ok) {
                 console.error("Custom proxy failed with status:", resp.status);
-                // Graceful fail: Return an empty payload so the map UI doesn't crash
-                return { json: () => Promise.resolve([]) }; 
+                return createEmptyResponse();
             }
             return resp;
         })
         .catch(function(err) {
             console.error("Network error reaching custom proxy:", err);
-            // Graceful fail: Return an empty payload
-            return { json: () => Promise.resolve([]) }; 
+            return createEmptyResponse();
         });
 }
+  
   function resetProxy() {
     PROXY_BASE = 'https://oref-proxy.xanagis.workers.dev';
     apiPrefix = '/api';
