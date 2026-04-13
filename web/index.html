@@ -1165,40 +1165,43 @@ try {
   // --- Config ---
   // Set PROXY_BASE to the Cloudflare Worker URL for production, e.g.:
   //   var PROXY_BASE = 'https://oref-proxy.YOUR_ACCOUNT.workers.dev';
-  var PROXY_BASE = 'https://proxy1.xanagis.workers.dev';
+  var PROXY_BASE = 'https://proxy2.xanagis.workers.dev';
   var apiPrefix = '/api'; // Pages Function; switches to '/api2' (Worker) if non-TLV
   var ANALYTICS_POLL_MS = 30000;
   var ANALYTICS_URL = '/api/analytics';
 
   function resetProxy() {
-    PROXY_BASE = '';
+    PROXY_BASE = 'https"//proxy2.xanagis.workers.dev';
     apiPrefix = '/api';
   }
 
   function apiFetch(endpoint) {
-    // 1. Map internal shorthand to Oref paths
-    var directPaths = {
-        'alerts': 'alert/alerts.json',
-        'history': 'History/Web/History.json'
-    };
+    // 1. Construct the URL to your Cloudflare proxy
+    var url = PROXY_BASE + apiPrefix + '/' + endpoint;
     
-    var orefPath = directPaths[endpoint] || endpoint;
-    var targetUrl = 'https://www.oref.org.il/WarningMessages/' + orefPath;
+    // 2. Append the debugapi flag if it exists
+    if (FF.debugapi) url += '?debugapi=' + encodeURIComponent(FF.debugapi);
     
-    // 2. Prepend a public CORS proxy
-    // corsproxy.io simply forwards the request and injects the missing CORS headers
-    // Using allorigins as a temporary alternative
-    var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl);
+    var wasProxy = apiPrefix === '/api2';
 
-    
-    return fetch(proxyUrl, {
-        method: 'GET',
-        headers: {
-            'Accept': '*/*',
-            // The proxy forwards this to Oref to satisfy Cloudflare's requirements
-            'X-Requested-With': 'XMLHttpRequest' 
-        },
-        cache: 'no-store'
+    return fetch(url).then(function(resp) {
+        // 3. Failover trigger on bad response
+        if (!resp.ok && wasProxy) { resetProxy(); }
+        return resp;
+    }, function(err) {
+        // 4. Failover trigger on network error
+        if (wasProxy) { resetProxy(); }
+        return Promise.reject(err);
+    }).then(function(resp) {
+        // 5. Detect if the request hit a non-Israel Cloudflare colocation
+        // and switch to the backup /api2 route if necessary
+        if (apiPrefix === '/api' && resp.url && resp.url.indexOf('/api2/') !== -1) {
+            var u = new URL(resp.url);
+            PROXY_BASE = u.origin !== location.origin ? u.origin : '';
+            console.log('Non-TLV colo detected, switching to ' + PROXY_BASE + '/api2');
+            apiPrefix = '/api2';
+        }
+        return resp;
     });
 }
 
