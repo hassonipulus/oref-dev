@@ -4770,44 +4770,6 @@ function fadeGreenMarkers() {
       colorSchemeMq.addListener(onColorSchemeChange);
     }
   } catch(e) {}
-
-  // --- Menu: Share ---
-  var isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  document.getElementById(isIos ? 'share-icon-ios' : 'share-icon-android').style.display = 'block';
-
-  if (navigator.share && ('ontouchstart' in window)) {
-    document.getElementById('menu-share').style.display = '';
-    document.getElementById('menu-share').querySelector('.menu-item-row').addEventListener('click', async function() {
-      closeMenu();
-      popPanelHistory();
-      try {
-        await navigator.share({
-          title: 'מפת התגוננות',
-          text: 'התרעות פיקוד העורף בזמן אמת',
-          url: 'https://alprazolam.cfd'
-        });
-      } catch (e) {
-        if (e.name !== 'AbortError') console.error('Share failed:', e);
-      }
-    });
-  }
-
-  // --- Menu: About ---
-  document.getElementById('menu-about').querySelector('.menu-item-row').addEventListener('click', function() {
-    closeMenu();
-    popPanelHistory();
-    openAbout();
-  });
-
-  document.getElementById('menu-visitors-row').addEventListener('click', function() {
-    showToast('מספר המבקרים בשעה האחרונה');
-  });
-
-  init();
-  _extInitDone = true;
-  _maybeDispatchReady();
-})();
 </script>
 <script>
 if ('serviceWorker' in navigator) {
