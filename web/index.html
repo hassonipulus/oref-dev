@@ -710,15 +710,7 @@ body.f-predict #menu-predict.f-gated { display: block !important; }
   .btn-text { font-size: 12px; }
   body.idle #right-panel { bottom: 8px; }
 }
-/* Idle mode: hide buttons after inactivity */
-body.idle #timeline-btn {
-  opacity: 0;
-  max-height: 0 !important;
-  overflow: hidden;
-  pointer-events: none;
-  margin: 0;
-  padding: 0;
-}
+
 body.idle #right-panel {
   bottom: 12px;
   gap: 0;
@@ -3649,7 +3641,8 @@ function fadeGreenMarkers() {
     var onDayHistoryReady = null; // callback when day-history fetch completes
 
     container.classList.add('has-data');
-
+    container.style.display = 'flex';
+      
     var TICK_COLORS = { red: '#e74c3c', purple: '#9b59b6', yellow: '#f1c40f', green: '#2ecc71' };
     var PLAY_SPEED = 510;
 
