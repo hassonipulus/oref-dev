@@ -1168,85 +1168,51 @@ try {
   //   var PROXY_BASE = 'https://oref-proxy.YOUR_ACCOUNT.workers.dev';
   var ANALYTICS_POLL_MS = 30000;
   var ANALYTICS_URL = '/api/analytics';
-// 1. The Sticky Memory variables (10 minutes)
-window.stickyAlerts = {}; 
-var STICKY_DURATION_MS = 10 * 60 * 1000; 
+// ==========================================
+// 1. CLEAN MAP INITIALIZATION
+// ==========================================
+var protocol = new pmtiles.Protocol();
+maplibregl.addProtocol("pmtiles", protocol.tile);
 
-// 2. The Production Fetch Function
-var PROXY_BASE = 'https://oref-proxy.xanagis.workers.dev'; 
+var map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://raw.githubusercontent.com/maorcc/oref-map/refs/heads/main/web/style.json',
+    center: [34.8, 31.5],
+    zoom: 7,
+    maxBounds: [[25.0, 6.0], [70.0, 44.0]],
+    touchPitch: false,
+    maxTileCacheZoomLevels: 8,
+    fadeDuration: 0,
+    transformRequest: function(url, resourceType) {
+        // Reroute the dead original server to your working file
+        if (url === 'pmtiles://https://tiles.oref-map.org/middle-east.pmtiles') {
+            return { url: 'pmtiles://https://alprazolam.io/middle-east.pmtiles' };
+        }
+        return { url: url };
+    }
+});
+
+// ==========================================
+// 2. CLEAN API FETCH (NO TEST LOGIC)
+// ==========================================
+var PROXY_BASE = 'https://oref-proxy.xanagis.workers.dev';
 var apiPrefix = '/api';
 
 function apiFetch(endpoint) {
     var url = PROXY_BASE + apiPrefix + '/' + endpoint;
+    
+    // Cache buster
     url += (url.indexOf('?') === -1 ? '?' : '&') + '_=' + new Date().getTime();
 
     return fetch(url, { cache: 'no-store' })
         .then(function(resp) {
             if (!resp.ok) return new Response("[]", { status: 200, headers: new Headers({'Content-Type': 'application/json'}) });
-            
-            // Pass-through for history or other endpoints
-            if (endpoint !== 'alerts') return resp;
-
-            // --- STICKY ALERTS MIDDLEWARE ---
-            return resp.json().then(function(data) {
-                var now = Date.now();
-                var incomingCities = [];
-                var basePayload = null;
-
-                var dataArray = Array.isArray(data) ? data : (Object.keys(data).length > 0 ? [data] : []);
-                
-                dataArray.forEach(function(item) {
-                    if (item && item.data && Array.isArray(item.data)) {
-                        item.data.forEach(function(city) { incomingCities.push(city); });
-                        if (!basePayload) basePayload = JSON.parse(JSON.stringify(item)); 
-                    }
-                });
-
-                // Add or refresh the 10-minute timer for incoming cities
-                incomingCities.forEach(function(city) {
-                    window.stickyAlerts[city] = now + STICKY_DURATION_MS;
-                });
-
-                // Purge expired cities and build active list
-                var activeCities = [];
-                for (var city in window.stickyAlerts) {
-                    if (now > window.stickyAlerts[city]) {
-                        delete window.stickyAlerts[city]; 
-                    } else {
-                        activeCities.push(city);
-                    }
-                }
-
-                if (activeCities.length === 0) {
-                    return new Response("[]", { status: 200, headers: new Headers({'Content-Type': 'application/json'}) });
-                }
-
-                if (!basePayload) {
-                    basePayload = {
-                        id: String(now),
-                        cat: "1",
-                        title: "התרעה",
-                        desc: "היכנסו למרחב המוגן",
-                        data: []
-                    };
-                }
-                
-                basePayload.data = activeCities;
-
-                return new Response(JSON.stringify(basePayload), { 
-                    status: 200, 
-                    headers: new Headers({'Content-Type': 'application/json'}) 
-                });
-                
-            }).catch(function(err) {
-                 return new Response("[]", { status: 200, headers: new Headers({'Content-Type': 'application/json'}) });
-            });
+            return resp;
         })
         .catch(function(err) {
             return new Response("[]", { status: 200, headers: new Headers({'Content-Type': 'application/json'}) });
         });
 }
-
   var lastVisitors24h = null;
 
   function fetchAnalytics() {
@@ -1281,16 +1247,6 @@ function apiFetch(endpoint) {
       analyticsTimer = null;
     }
   }
-  
-function triggerTest() {
-    window.testAlertEndTime = Date.now() + 8000; 
-    window.testAlertId = "TEST_" + Date.now(); 
-    
-    // Force the app to think it's in an active state
-    if (typeof isLiveMode !== 'undefined') isLiveMode = true; 
-    
-    console.log("🚨 Test armed for 8 seconds! Forcing Live Mode...");
-}
 
   function pausePolling() {
     if (livePollId)    { clearInterval(livePollId);    livePollId    = null; }
