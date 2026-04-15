@@ -1511,18 +1511,13 @@ function triggerTest() {
     };
   }
 
-  var MAP_STYLE = buildMapStyle(isDarkActive, currentLang);
-
-// ==========================================
-// 1. MAP ENGINE SETUP
-// ==========================================
+var MAP_STYLE = buildMapStyle(isDarkActive, currentLang);
 var protocol = new pmtiles.Protocol();
 maplibregl.addProtocol("pmtiles", protocol.tile);
 
 var map = new maplibregl.Map({
     container: 'map',
-    // Force the official style to prevent blank screens
-    style: 'https://raw.githubusercontent.com/maorcc/oref-map/refs/heads/main/web/style.json',
+    style: MAP_STYLE,
     center: [34.8, 31.5],
     zoom: 7,
     maxBounds: [[25.0, 6.0], [70.0, 44.0]],
