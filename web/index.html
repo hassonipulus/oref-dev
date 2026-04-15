@@ -1508,8 +1508,15 @@ function triggerTest() {
     maxBounds: [[25.0, 6.0], [70.0, 44.0]],
     touchPitch: false,
     maxTileCacheZoomLevels: 8,
-    fadeDuration: 0
-  });
+    fadeDuration: 0,
+    transformRequest: function(url, resourceType) {
+        // Intercept requests to the blocked original server and redirect to your self-hosted file
+        if (url === 'pmtiles://https://tiles.oref-map.org/middle-east.pmtiles') {
+            return { url: 'pmtiles://https://alprazolam.io/middle-east.pmtiles' };
+        }
+        return { url: url };
+    }
+});
 
   map.dragRotate.disable();
   map.touchZoomRotate.disableRotation();
