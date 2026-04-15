@@ -1171,7 +1171,7 @@ try {
   
   // 1. Point this directly to your new Israeli VPS or custom domain
 // Example: 'http://11.22.33.44:8080' or 'https://api.your-domain.com'
-/*var PROXY_BASE = 'https://oref-proxy.xanagis.workers.dev'; 
+var PROXY_BASE = 'https://oref-proxy.xanagis.workers.dev'; 
 
 // 2. Adjust this if your custom proxy uses a different route path (or leave empty if it handles endpoints at the root)
 var apiPrefix = '/api'; 
@@ -1207,7 +1207,8 @@ function apiFetch(endpoint) {
   function resetProxy() {
     PROXY_BASE = 'https://oref-proxy.xanagis.workers.dev';
     apiPrefix = '/api';
-}*/
+}
+  /*
 // 1. The ultra-simple test state
 window.testModeActive = false;
 
@@ -1246,7 +1247,7 @@ function apiFetch(endpoint) {
             return new Response("[]", { status: 200, headers: new Headers({'Content-Type': 'application/json'}) });
         });
 }
-
+*/
   var lastVisitors24h = null;
 
   function fetchAnalytics() {
