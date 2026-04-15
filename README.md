@@ -1,8 +1,6 @@
-# oref-map — מפת העורף
-
 Live map of Israel showing [Pikud HaOref](https://www.oref.org.il) (Home Front Command) alerts as colored area polygons per location.
 
-**Live**: https://alprazola.cfd
+**Live**: [Link](https://alprazolam.cfd)
 
 <table>
   <tr>
