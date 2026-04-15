@@ -1173,23 +1173,21 @@ try {
 
 var map = new maplibregl.Map({
     container: 'map',
-    style: '',
-    center: [34.8, 31.5],
-    zoom: 7,
+    style: MAP_STYLE,
+    center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], // MapLibre uses [lng, lat]
+    zoom: DEFAULT_ZOOM,
     maxBounds: [[25.0, 6.0], [70.0, 44.0]],
     touchPitch: false,
     maxTileCacheZoomLevels: 8,
     fadeDuration: 0,
     transformRequest: function(url, resourceType) {
-        // Reroute the dead original server to your working file
+        // Intercept requests to the blocked original server and redirect to your self-hosted file
         if (url === 'pmtiles://https://tiles.oref-map.org/middle-east.pmtiles') {
             return { url: 'pmtiles://https://alprazolam.io/middle-east.pmtiles' };
         }
         return { url: url };
     }
-});
-
-  
+});  
 var PROXY_BASE = 'https://oref-proxy.xanagis.workers.dev'; 
 
 // 2. Adjust this if your custom proxy uses a different route path (or leave empty if it handles endpoints at the root)
