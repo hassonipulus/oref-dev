@@ -1268,6 +1268,16 @@ function apiFetch(endpoint) {
       analyticsTimer = null;
     }
   }
+  
+function triggerTest() {
+    window.testAlertEndTime = Date.now() + 8000; 
+    window.testAlertId = "TEST_" + Date.now(); 
+    
+    // Force the app to think it's in an active state
+    if (typeof isLiveMode !== 'undefined') isLiveMode = true; 
+    
+    console.log("🚨 Test armed for 8 seconds! Forcing Live Mode...");
+}
 
   function pausePolling() {
     if (livePollId)    { clearInterval(livePollId);    livePollId    = null; }
