@@ -841,6 +841,16 @@ try {
   if (t === 'dark' || ((!t || t === 'auto') && window.matchMedia('(prefers-color-scheme: dark)').matches))
     document.body.classList.add('dark');
 } catch(e) {}
+
+  window.testAlertEndTime = 0;
+window.testAlertId = "";
+
+function triggerTest() {
+    window.testAlertEndTime = Date.now() + 8000; 
+    window.testAlertId = "TEST_" + Date.now(); 
+    console.log("🚨 Test armed for 8 seconds!");
+}
+
 </script>
 
 <div id="site-logo">
@@ -4831,5 +4841,10 @@ if ('serviceWorker' in navigator) {
   });
 })();
 </script>
+  <div style="position: fixed; bottom: 40px; left: 20px; z-index: 999999;">
+    <button onclick="triggerTest()" style="padding: 15px 20px; font-size: 16px; font-weight: bold; background: #d32f2f; color: white; border: 2px solid white; border-radius: 8px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.6);">
+        🚨 TEST ALERT
+    </button>
+</div>
 </body>
  </html>
