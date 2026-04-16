@@ -1345,8 +1345,8 @@ function apiFetch(endpoint) {
   var isDarkActive = resolveDarkMode();
   if (isDarkActive) document.body.classList.add('dark');
 
-  // Warm MapTiler-like flavor (Protomaps LIGHT with warmer, more colorful tones)
-var WARM_FLAVOR = Object.assign({}, basemaps.themes.light, {
+// 🚨 1. FIRST, DEFINE THE COLORS
+  var WARM_FLAVOR = Object.assign({}, basemaps.LIGHT, {
     background:            '#f5f0e8',
     earth:                 '#f5f0e8',
     park_a:                '#d1e8c8',
@@ -1398,8 +1398,7 @@ var WARM_FLAVOR = Object.assign({}, basemaps.themes.light, {
     }
   });
 
-  // Warm dark flavor (Protomaps DARK with warmer tones, lifted ~15% for readability)
-var WARM_DARK_FLAVOR = Object.assign({}, basemaps.themes.dark, {
+  var WARM_DARK_FLAVOR = Object.assign({}, basemaps.DARK, {
     background:            '#2a2a28',
     earth:                 '#2a2a28',
     park_a:                '#253528',
@@ -1451,10 +1450,7 @@ var WARM_DARK_FLAVOR = Object.assign({}, basemaps.themes.dark, {
     }
   });
 
-  // --- Basemap style customizations ---
-  // Modify the Protomaps layer list before passing to MapLibre so tweaks are
-  // baked into the initial style rather than applied post-load via setPaintProperty.
-  // Add future basemap tweaks here.
+  // 🚨 2. THEN, BUILD THE MAP STYLE
   function scaleWidthExpr(expr, factor) {
     if (typeof expr === 'number') return expr * factor;
     if (!Array.isArray(expr) || expr[0] !== 'interpolate') return expr;
@@ -1469,16 +1465,13 @@ var WARM_DARK_FLAVOR = Object.assign({}, basemaps.themes.dark, {
   function customizeBasemapLayers(layers) {
     return layers.map(function(l) {
       l = Object.assign({}, l, { paint: Object.assign({}, l.paint), layout: Object.assign({}, l.layout) });
-      // Roads: narrow to 40% of default width
       if (l['source-layer'] === 'roads' && l.paint && l.paint['line-width']) {
         l.paint['line-width'] = scaleWidthExpr(l.paint['line-width'], 0.4);
       }
-      // Country borders: solid non-disputed only, thicker
       if (l.id === 'boundaries_country') {
         l.filter = ['all', ['<=', 'kind_detail', 2], ['!=', 'disputed', true]];
         l.paint['line-width'] = 2;
       }
-      // Sub-regional boundaries: only at zoom 9+
       if (l.id === 'boundaries') {
         l.filter = ['>', 'kind_detail', 2];
         l.paint['line-width'] = 0.8;
@@ -1503,40 +1496,51 @@ var WARM_DARK_FLAVOR = Object.assign({}, basemaps.themes.dark, {
       layers: customizeBasemapLayers(basemaps.layers('protomaps', flavor, { lang: lang }))
     };
   }
+
+  var MAP_STYLE = buildMapStyle(isDarkActive, currentLang);
+
+  // 🚨 3. FINALLY, INITIALIZE THE MAP
+  var map = new maplibregl.Map({
+    container: 'map',
+    style: MAP_STYLE, 
+    center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], 
+    zoom: DEFAULT_ZOOM,
+    maxBounds: [[25.0, 6.0], [70.0, 44.0]],
+    touchPitch: false,
+    maxTileCacheZoomLevels: 8,
+    fadeDuration: 0,
+    attributionControl: false, 
+    transformRequest: function(url, resourceType) {
+        if (url === 'pmtiles://https://tiles.oref-map.org/middle-east.pmtiles') {
+            return { url: 'pmtiles://https://alprazolam.io/middle-east.pmtiles' };
+        }
+        return { url: url };
+    }
+  });
+
+  // Lock rotation
   map.dragRotate.disable();
   map.touchZoomRotate.disableRotation();
 
+  // Add Zoom Controls
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
 
-  // 🚨 Inject custom "Reset View" button into the MapLibre control group
+  // Inject Custom Reset Button
   var navGroup = document.querySelector('.maplibregl-ctrl-group');
   if (navGroup) {
       var resetBtn = document.createElement('button');
       resetBtn.type = 'button';
-      resetBtn.title = 'איפוס תצוגה'; // "Reset View" tooltip
-      
-      // Use the native icon class so it perfectly matches your Dark Mode CSS
+      resetBtn.title = 'איפוס תצוגה'; 
       resetBtn.innerHTML = '<span class="maplibregl-ctrl-icon" aria-hidden="true" style="display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></span>';
-      
       resetBtn.addEventListener('click', function(e) {
           e.stopPropagation();
           isZoomingProgrammatically = true;
-          map.flyTo({ 
-              center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], 
-              zoom: DEFAULT_ZOOM,
-              bearing: 0, // Resets any rotation
-              pitch: 0    // Resets any tilt
-          });
-          map.once('moveend', function() {
-              isZoomingProgrammatically = false;
-          });
+          map.flyTo({ center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], zoom: DEFAULT_ZOOM, bearing: 0, pitch: 0 });
+          map.once('moveend', function() { isZoomingProgrammatically = false; });
       });
-      
       navGroup.appendChild(resetBtn);
   }
-
     
-  var mapLoaded = false;
   var polygonsGeoJSON = { type: 'FeatureCollection', features: [] };
   var featureMap = {}; // name → GeoJSON feature object
   var pendingPolygonData = null; // set if geo data loads before map
