@@ -4907,17 +4907,60 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 </div>
-<div style="position: fixed; bottom: 24px; left: 24px; z-index: 9999; display: flex; gap: 12px; flex-wrap: wrap;">
+<div id="dev-tools-container" style="position: fixed; bottom: 24px; left: 24px; z-index: 9999; display: flex; flex-direction: column-reverse; align-items: flex-start; gap: 10px; direction: rtl;">
   
-  <button id="dev-test-btn" style="padding: 12px 18px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 14px;">
-    🚨 טסט (Local Test)
-  </button>
-  
-  <button onclick="location.reload()" style="padding: 12px 18px; background: #6b7280; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 14px;">
-    🔄 נקה מפה (Clear)
+  <button id="dev-toggle-btn" style="width: 44px; height: 44px; border-radius: 50%; background: #374151; color: white; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; transition: transform 0.2s ease, background 0.2s ease; user-select: none;">
+    🛠️
   </button>
 
+  <div id="dev-buttons" style="display: none; flex-direction: column; gap: 8px; background: rgba(255,255,255,0.95); padding: 12px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); border: 1px solid #e5e7eb;">
+    <button id="dev-test-btn" style="padding: 10px 16px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; width: 100%; box-shadow: 0 2px 4px rgba(239,68,68,0.3);">
+      🚨 טסט (Test)
+    </button>
+    <button onclick="location.reload()" style="padding: 10px 16px; background: #6b7280; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; width: 100%; box-shadow: 0 2px 4px rgba(107,114,128,0.3);">
+      🔄 נקה מפה
+    </button>
+  </div>
+
 </div>
+
+<script>
+  // 1. Toggle Menu Logic
+  var devToggleBtn = document.getElementById('dev-toggle-btn');
+  var devButtons = document.getElementById('dev-buttons');
+  
+  devToggleBtn.addEventListener('click', function() {
+      if (devButtons.style.display === 'none') {
+          devButtons.style.display = 'flex';
+          devToggleBtn.style.transform = 'rotate(45deg)'; // Spin the icon a bit for a cool effect
+          devToggleBtn.style.background = '#4b5563';
+      } else {
+          devButtons.style.display = 'none';
+          devToggleBtn.style.transform = 'rotate(0deg)';
+          devToggleBtn.style.background = '#374151';
+      }
+  });
+
+  // 2. Test Alert Logic
+  document.getElementById('dev-test-btn').addEventListener('click', function() {
+      var fakeAlert = {
+          id: "TEST_" + Date.now(),
+          cat: "1",
+          title: "ירי רקטות וטילים",
+          data: ["תל אביב - מרכז", "ראש העין"],
+          desc: "היכנסו למרחב המוגן"
+      };
+      
+      if (window.injectAlert) {
+          window.injectAlert(fakeAlert);
+          if (typeof maybeZoomToEvent === 'function') {
+              setTimeout(maybeZoomToEvent, 100); 
+          }
+      } else {
+          console.error("injectAlert function not found.");
+      }
+  });
+</script>
 
 <script>
   document.getElementById('dev-test-btn').addEventListener('click', function() {
