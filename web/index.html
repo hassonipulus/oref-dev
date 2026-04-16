@@ -1586,17 +1586,33 @@ var MAP_STYLE = buildMapStyle(isDarkActive, currentLang);
       }
     });
 
-    map.on('click', 'alerts-hit', function(e) {
+        map.on('click', 'alerts-hit', function(e) {
       if (menuOpen) return;
       if (drivingModeFeatureEnabled) return;
       e.originalEvent.stopPropagation();
-      var name = e.features[0].properties.name;
+      
+      // 🚨 THE SAFE FIX: Search through all clicked layers to find the real city, ignoring the blanket
+      var validFeature = null;
+      for (var i = 0; i < e.features.length; i++) {
+          var fName = e.features[i].properties.name;
+          // If the name doesn't start with "border_" and isn't "Israel", it's our city!
+          if (fName.indexOf('border_') !== 0 && fName !== 'Israel' && fName !== 'israel') {
+              validFeature = e.features[i];
+              break;
+          }
+      }
+      
+      // If they somehow clicked a blank space that only has the blanket, do nothing
+      if (!validFeature) return; 
+
+      var name = validFeature.properties.name;
       if (selectedLocation === name) {
         deselectLocation();
       } else {
         openLocationPanel(name);
       }
     });
+
     map.on('mouseenter', 'alerts-hit', function() {
       if (!menuOpen && !drivingModeFeatureEnabled) map.getCanvas().style.cursor = 'pointer';
     });
@@ -2520,37 +2536,12 @@ var MAP_STYLE = buildMapStyle(isDarkActive, currentLang);
 
   var pendingPolygonCallback = null;
 
-  // Extract population data embedded in the polygons file
-    if (data._populations) {
-      locationPopulations = data._populations;
+  function buildPolygons(data, onReady) {
+    if (!mapLoaded) {
+      pendingPolygonData = data;
+      if (onReady) pendingPolygonCallback = onReady;
+      return;
     }
-    var features = [];
-    var fid = 0;
-    for (var name in data) {
-      
-      // 🚨 THE FIX: Filter out the giant border blankets so they don't block clicks!
-      if (name.startsWith('border_') || name === 'Israel') continue;
-
-      var coords = data[name];
-      if (!Array.isArray(coords)) continue;
-      var isNested = Array.isArray(coords[0][0]);
-      var polygonCoords = isNested ? coords : [coords];
-      var feature = {
-        type: 'Feature',
-        id: fid,
-        properties: { name: name },
-        geometry: { type: 'Polygon', coordinates: polygonCoords }
-      };
-      features.push(feature);
-      featureMap[name] = feature;
-      nameToId[name] = fid;
-      fid++;
-    }
-    polygonsGeoJSON.features = features;
-    updateMapLibreSource();
-    console.log('Loaded GeoJSON polygons for', features.length, 'locations');
-    if (onReady) onReady();
-  }
     // Extract population data embedded in the polygons file
     if (data._populations) {
       locationPopulations = data._populations;
@@ -5014,4 +5005,4 @@ if ('serviceWorker' in navigator) {
 </script>
 </div>
 </body>
- </html>
+</html>
