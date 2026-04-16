@@ -1346,7 +1346,7 @@ function apiFetch(endpoint) {
   if (isDarkActive) document.body.classList.add('dark');
 
   // Warm MapTiler-like flavor (Protomaps LIGHT with warmer, more colorful tones)
-  var WARM_FLAVOR = Object.assign({}, basemaps.LIGHT, {
+var WARM_FLAVOR = Object.assign({}, basemaps.themes.light, {
     background:            '#f5f0e8',
     earth:                 '#f5f0e8',
     park_a:                '#d1e8c8',
@@ -1399,7 +1399,7 @@ function apiFetch(endpoint) {
   });
 
   // Warm dark flavor (Protomaps DARK with warmer tones, lifted ~15% for readability)
-  var WARM_DARK_FLAVOR = Object.assign({}, basemaps.DARK, {
+var WARM_DARK_FLAVOR = Object.assign({}, basemaps.themes.dark, {
     background:            '#2a2a28',
     earth:                 '#2a2a28',
     park_a:                '#253528',
