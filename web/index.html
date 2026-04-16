@@ -1393,15 +1393,7 @@ function apiFetch(endpoint) {
       if (!menuOpen && !drivingModeFeatureEnabled) map.getCanvas().style.cursor = 'pointer';
     });
     map.on('mouseleave', 'alerts-hit', function() { map.getCanvas().style.cursor = ''; });
-
-    if (pendingPolygonData) {
-      var cb = pendingPolygonCallback;
-      pendingPolygonCallback = null;
-      buildPolygons(pendingPolygonData, cb);
-      pendingPolygonData = null;
-    }
-  });
-    
+      
     if (pendingPolygonData) {
       var cb = pendingPolygonCallback;
       pendingPolygonCallback = null;
