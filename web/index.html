@@ -3292,18 +3292,11 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
         if (liveErrors > 3) setStatus('err', 'בעיית תקשורת לפיקוד העורף. מנסה שוב...');
         console.error('Live poll error:', err);
       });
-  } // The function ends here. Nothing should be between this and the next variable.
+  } // End of function.
 
-  var processedHistoryKeys = new Set();    
-      .catch(function(err) {
-        liveErrors++;
-        lastErrorMsg = 'Live alerts: ' + err.message;
-        if (liveErrors > 3) setStatus('err', 'בעיית תקשורת לפיקוד העורף. מנסה שוב...');
-        console.error('Live poll error:', err);
-      });
-  } // 🚨 THIS CLOSES THE FUNCTION!
-
-  var processedHistoryKeys = new Set();  function processHistoryEntry(entry) {
+    var processedHistoryKeys = new Set();  
+    
+    function processHistoryEntry(entry) {
     if (!entry || !entry.data || !entry.title) return;
     
     var title = (entry.title + ' ' + (entry.desc || '')).replace(/\s+/g, ' ').trim();
