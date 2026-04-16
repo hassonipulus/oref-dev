@@ -1542,22 +1542,31 @@ var map = new maplibregl.Map({
       }
     });
 
-    map.on('click', 'alerts-hit', function(e) {
+map.on('click', 'alerts-hit', function(e) {
       if (menuOpen || drivingModeFeatureEnabled) return;
       e.originalEvent.stopPropagation();
+      
       var validFeature = null;
       for (var i = 0; i < e.features.length; i++) {
           var fName = e.features[i].properties.name.toLowerCase();
-          if (fName.indexOf('border') !== 0 && fName !== 'israel') {
+          
+          // 🚨 DOUBLE PROTECTION: Only click if it's a real city
+          if (!fName.includes('border') && !fName.includes('israel') && !fName.includes('ישראל')) {
               validFeature = e.features[i];
               break;
           }
       }
+      
       if (!validFeature) return; 
+      
       var name = validFeature.properties.name;
-      if (selectedLocation === name) deselectLocation();
-      else openLocationPanel(name);
+      if (selectedLocation === name) {
+        deselectLocation();
+      } else {
+        openLocationPanel(name);
+      }
     });
+      
 
     map.on('mouseenter', 'alerts-hit', function() {
       if (!menuOpen && !drivingModeFeatureEnabled) map.getCanvas().style.cursor = 'pointer';
@@ -2532,43 +2541,6 @@ function buildPolygons(data, onReady) {
     if (onReady) onReady();
   }
     
-    if (data._populations) {
-      locationPopulations = data._populations;
-    }
-    
-    var features = [];
-    var fid = 0;
-    
-    for (var name in data) {
-      // 🚨 THE BULLETPROOF FIX: Case-insensitive filter to catch all variations of the blanket
-      var safeName = name.toLowerCase();
-      if (safeName.indexOf('border') === 0 || safeName === 'israel' || safeName === 'ישראל') {
-          continue; 
-      }
-
-      var coords = data[name];
-      if (!Array.isArray(coords)) continue;
-      var isNested = Array.isArray(coords[0][0]);
-      var polygonCoords = isNested ? coords : [coords];
-      
-      var feature = {
-        type: 'Feature',
-        id: fid,
-        properties: { name: name },
-        geometry: { type: 'Polygon', coordinates: polygonCoords }
-      };
-      
-      features.push(feature);
-      featureMap[name] = feature;
-      nameToId[name] = fid;
-      fid++;
-    }
-    
-    polygonsGeoJSON.features = features;
-    updateMapLibreSource();
-    if (onReady) onReady();
-  }
-
   // --- Title classification (RTL Safe) ---
   function classifyTitle(title) {
     title = title.replace(/\s+/g, ' ').trim();
