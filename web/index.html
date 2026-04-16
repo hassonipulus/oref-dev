@@ -3391,36 +3391,9 @@ function fadeGreenMarkers() {
             processLiveAlert(alert);
         });
       })
-      .catch(function(err) {
-        liveErrors++;
-        lastErrorMsg = 'Live alerts: ' + err.message;
-        if (liveErrors > 3) {
-          setStatus('err', 'בעיית תקשורת לפיקוד העורף. מנסה שוב...');
-        }
-        console.error('Live poll error:', err);
-      });
-  }
-
-    var newEntries = 0;
-    for (var i = 0; i < entries.length; i++) {
-      var entry = entries[i];
-      var alertDate = entry.alertDate || '';
-      if (lastHistoryDate && alertDate < lastHistoryDate) continue;
-      processHistoryEntry(entry);
-      newEntries++;
-    }
-
-    if (entries.length > 0) {
-      lastHistoryDate = entries[entries.length - 1].alertDate || lastHistoryDate;
-    }
-
-    if (newEntries > 0) {
-      console.log('History: processed', newEntries, 'new entries');
-      document.dispatchEvent(new CustomEvent('app:stateChanged'));
-    }
-  }
-var processedHistoryKeys = new Set();
   
+  var processedHistoryKeys = new Set();
+      
   function processHistoryEntry(entry) {
     if (!entry || !entry.data || !entry.title) return;
     
