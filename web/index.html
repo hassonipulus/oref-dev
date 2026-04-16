@@ -1163,57 +1163,6 @@ try {
   var protocol = new pmtiles.Protocol();
   maplibregl.addProtocol("pmtiles", protocol.tile);
   var PROXY_BASE = 'https://oref-proxy.xanagis.workers.dev'; 
-  var MAP_STYLE = buildMapStyle(isDarkActive, currentLang);
-
-// 🚨 THE PERFECT MAP INITIALIZATION 🚨
-var map = new maplibregl.Map({
-    container: 'map',
-    style: MAP_STYLE, // Now the style actually exists!
-    center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], // MapLibre uses [lng, lat]
-    zoom: DEFAULT_ZOOM,
-    maxBounds: [[25.0, 6.0], [70.0, 44.0]],
-    touchPitch: false,
-    maxTileCacheZoomLevels: 8,
-    fadeDuration: 0,
-    attributionControl: false, // Hides the MapLibre logo
-    transformRequest: function(url, resourceType) {
-        if (url === 'pmtiles://https://tiles.oref-map.org/middle-east.pmtiles') {
-            return { url: 'pmtiles://https://alprazolam.io/middle-east.pmtiles' };
-        }
-        return { url: url };
-    }
-});
-
-// Lock rotation
-map.dragRotate.disable();
-map.touchZoomRotate.disableRotation();
-
-// Add Zoom Controls
-map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
-
-// Inject the Custom Reset/Home Button
-var navGroup = document.querySelector('.maplibregl-ctrl-group');
-if (navGroup) {
-    var resetBtn = document.createElement('button');
-    resetBtn.type = 'button';
-    resetBtn.title = 'איפוס תצוגה'; 
-    resetBtn.innerHTML = '<span class="maplibregl-ctrl-icon" aria-hidden="true" style="display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></span>';
-    
-    resetBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        isZoomingProgrammatically = true;
-        map.flyTo({ 
-            center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], 
-            zoom: DEFAULT_ZOOM,
-            bearing: 0, 
-            pitch: 0    
-        });
-        map.once('moveend', function() {
-            isZoomingProgrammatically = false;
-        });
-    });
-    navGroup.appendChild(resetBtn);
-}
 
 // 2. Adjust this if your custom proxy uses a different route path (or leave empty if it handles endpoints at the root)
 var apiPrefix = '/api'; 
