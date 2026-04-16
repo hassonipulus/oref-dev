@@ -3095,6 +3095,13 @@ function setLocationState(name, state, since) {
 
   function processLiveAlert(alert) {
     if (!alert || !alert.data || !alert.title) return;
+    
+    // 🚨 FRONTEND FIX: Stop processing if this is the exact same alert we just handled
+    var isNewAlert = alert.id !== lastLiveAlertId;
+    if (!isNewAlert) return; 
+    
+    lastLiveAlertId = alert.id;
+    
     var title = (alert.desc || alert.title).replace(/\s+/g, ' ').trim();
     var state = classifyTitle(title);
     if (state !== 'green') lastDangerTime = Date.now();
