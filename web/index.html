@@ -1472,27 +1472,6 @@ function apiFetch(endpoint) {
       layers: customizeBasemapLayers(basemaps.layers('protomaps', flavor, { lang: lang }))
     };
   }
-
-var MAP_STYLE = buildMapStyle(isDarkActive, currentLang);
-
-  var map = new maplibregl.Map({
-    container: 'map',
-    style: MAP_STYLE,
-    center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], // MapLibre uses [lng, lat]
-    zoom: DEFAULT_ZOOM,
-    maxBounds: [[25.0, 6.0], [70.0, 44.0]],
-    touchPitch: false,
-    maxTileCacheZoomLevels: 8,
-    fadeDuration: 0,
-    transformRequest: function(url, resourceType) {
-        // Intercept requests to the blocked original server and redirect to your self-hosted file
-        if (url === 'pmtiles://https://tiles.oref-map.org/middle-east.pmtiles') {
-            return { url: 'pmtiles://https://alprazolam.io/middle-east.pmtiles' };
-        }
-        return { url: url };
-    }
-  });
-
   map.dragRotate.disable();
   map.touchZoomRotate.disableRotation();
 
