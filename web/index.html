@@ -3172,18 +3172,7 @@ function processLiveAlert(alert) {
     console.log(JSON.stringify(red));
     return red;
   };
-
-    // 🚨 1. Add this new memory set right above the function
-  var processedHistoryKeys = new Set();
-
-  // 🚨 2. Replace your existing function with this one
-  function processHistoryEntries(entries) {
-    if (!Array.isArray(entries)) return;
-
-    entries.sort(function(a, b) {
-      return (a.alertDate || '').localeCompare(b.alertDate || '');
-    });
-
+    
     var newEntries = 0;
     for (var i = 0; i < entries.length; i++) {
       var entry = entries[i];
@@ -3415,13 +3404,6 @@ function fadeGreenMarkers() {
       });
   }
 
-  function processHistoryEntries(entries) {
-    if (!Array.isArray(entries)) return;
-
-    entries.sort(function(a, b) {
-      return (a.alertDate || '').localeCompare(b.alertDate || '');
-    });
-
     var newEntries = 0;
     for (var i = 0; i < entries.length; i++) {
       var entry = entries[i];
@@ -3440,7 +3422,65 @@ function fadeGreenMarkers() {
       document.dispatchEvent(new CustomEvent('app:stateChanged'));
     }
   }
+var processedHistoryKeys = new Set();
+  
+  function processHistoryEntry(entry) {
+    if (!entry || !entry.data || !entry.title) return;
+    
+    var title = (entry.title + ' ' + (entry.desc || '')).replace(/\s+/g, ' ').trim();
+    var state = classifyTitle(title);
+    
+    // History API sometimes returns comma-separated strings instead of arrays
+    var locations = Array.isArray(entry.data) ? entry.data : entry.data.split(',').map(function(s) { return s.trim(); });
+    var cleanTitle = entry.title.replace(/\s+/g, ' ').trim();
+    
+    for (var i = 0; i < locations.length; i++) {
+      var loc = normalizeGeresh(locations[i]);
+      if (!loc) continue;
+      
+      recordHistory(loc, cleanTitle, entry.alertDate || '', state);
+      
+      if (isLiveMode) {
+        setLocationState(loc, state, parseAlertDate(entry.alertDate));
+      } else if (liveLocationStates) {
+        updateShadowState(loc, state, parseAlertDate(entry.alertDate));
+      }
+    }
+  }
 
+  function processHistoryEntries(entries) {
+    if (!Array.isArray(entries)) return;
+
+    entries.sort(function(a, b) {
+      return (a.alertDate || '').localeCompare(b.alertDate || '');
+    });
+
+    var newEntries = 0;
+    for (var i = 0; i < entries.length; i++) {
+      var entry = entries[i];
+      var alertDate = entry.alertDate || '';
+      
+      if (lastHistoryDate && alertDate < lastHistoryDate) continue;
+
+      // Smart Memory: Create a unique fingerprint so the exact same alert is NEVER processed twice
+      var uniqueKey = (entry.data || '') + '|' + (entry.title || '') + '|' + alertDate;
+      if (processedHistoryKeys.has(uniqueKey)) continue;
+      processedHistoryKeys.add(uniqueKey);
+
+      processHistoryEntry(entry);
+      newEntries++;
+    }
+
+    if (entries.length > 0) {
+      lastHistoryDate = entries[entries.length - 1].alertDate || lastHistoryDate;
+    }
+
+    if (newEntries > 0) {
+      console.log('History: processed', newEntries, 'new entries');
+      document.dispatchEvent(new CustomEvent('app:stateChanged'));
+    }
+  }
+    
   function fetchHistory(onDone) {
     apiFetch('history')
       .then(function(resp) {
