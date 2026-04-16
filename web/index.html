@@ -1429,6 +1429,22 @@ function apiFetch(endpoint) {
       layers: customizeBasemapLayers(basemaps.layers('protomaps', flavor, { lang: lang }))
     };
   }
+
+// --- Language & theme preferences ---
+  var VALID_LANGS = ['he', 'en', 'ar', 'ru'];
+  var VALID_THEMES = ['light', 'dark', 'auto'];
+  var currentLang = 'he';
+  var currentTheme = 'auto';
+  try { var sl = localStorage.getItem('oref-map-lang'); if (VALID_LANGS.indexOf(sl) !== -1) currentLang = sl; } catch(e) {}
+  try { var st = localStorage.getItem('oref-theme'); if (VALID_THEMES.indexOf(st) !== -1) currentTheme = st; } catch(e) {}
+
+  function resolveDarkMode() {
+    if (currentTheme === 'dark') return true;
+    if (currentTheme === 'auto') return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return false;
+  }
+  var isDarkActive = resolveDarkMode();
+  if (isDarkActive) document.body.classList.add('dark');
     
   var MAP_STYLE = buildMapStyle(isDarkActive, currentLang);
 
