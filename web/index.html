@@ -1294,7 +1294,7 @@ function apiFetch(endpoint) {
   var isDarkActive = resolveDarkMode();
   if (isDarkActive) document.body.classList.add('dark');
 // --- Basemap style customizations ---
-  function scaleWidthExpr(expr, factor) {
+function scaleWidthExpr(expr, factor) {
     if (typeof expr === 'number') return expr * factor;
     if (!Array.isArray(expr) || expr[0] !== 'interpolate') return expr;
     var scaled = [expr[0], expr[1], expr[2]];
@@ -1324,8 +1324,7 @@ function apiFetch(endpoint) {
     });
   }
 
-  // 🚨 1. FIRST, DEFINE COLORS USING CORRECT V5 SYNTAX
-  var WARM_FLAVOR = Object.assign({}, basemaps.namedFlavor('light'), {
+  var WARM_FLAVOR = Object.assign({}, (basemaps.themes ? basemaps.themes.light : basemaps.LIGHT), {
     background:            '#f5f0e8',
     earth:                 '#f5f0e8',
     park_a:                '#d1e8c8',
@@ -1377,7 +1376,7 @@ function apiFetch(endpoint) {
     }
   });
 
-  var WARM_DARK_FLAVOR = Object.assign({}, basemaps.namedFlavor('dark'), {
+  var WARM_DARK_FLAVOR = Object.assign({}, (basemaps.themes ? basemaps.themes.dark : basemaps.DARK), {
     background:            '#2a2a28',
     earth:                 '#2a2a28',
     park_a:                '#253528',
@@ -1429,7 +1428,6 @@ function apiFetch(endpoint) {
     }
   });
 
-  // 🚨 2. THEN, BUILD THE MAP STYLE
   function buildMapStyle(isDark, lang) {
     var flavor = isDark ? WARM_DARK_FLAVOR : WARM_FLAVOR;
     return {
@@ -1448,11 +1446,10 @@ function apiFetch(endpoint) {
 
   var MAP_STYLE = buildMapStyle(isDarkActive, currentLang);
 
-  // 🚨 3. FINALLY, INITIALIZE THE MAP
   var map = new maplibregl.Map({
     container: 'map',
     style: MAP_STYLE,
-    center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], // MapLibre uses [lng, lat]
+    center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], 
     zoom: DEFAULT_ZOOM,
     maxBounds: [[25.0, 6.0], [70.0, 44.0]],
     touchPitch: false,
@@ -1472,7 +1469,6 @@ function apiFetch(endpoint) {
 
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
 
-  // Inject Custom Reset Button
   var navGroup = document.querySelector('.maplibregl-ctrl-group');
   if (navGroup) {
       var resetBtn = document.createElement('button');
@@ -1487,11 +1483,11 @@ function apiFetch(endpoint) {
       });
       navGroup.appendChild(resetBtn);
   }
-  var mapLoaded = false; 
-    
+  
+  var mapLoaded = false;
   var polygonsGeoJSON = { type: 'FeatureCollection', features: [] };
   var featureMap = {}; // name → GeoJSON feature object
-  var pendingPolygonData = null; // set if geo data loads before map  // Lock rotation
+  var pendingPolygonData = null; // set if geo data loads before map
     
   map.dragRotate.disable();
   map.touchZoomRotate.disableRotation();
