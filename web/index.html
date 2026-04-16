@@ -1295,29 +1295,6 @@ function apiFetch(endpoint) {
   if (isDarkActive) document.body.classList.add('dark');
 
   var pendingPolygonData = null; // set if geo data loads before map
-    
-  map.dragRotate.disable();
-  map.touchZoomRotate.disableRotation();
-
-  // Add Zoom Controls
-  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
-
-  // Inject Custom Reset Button
-  var navGroup = document.querySelector('.maplibregl-ctrl-group');
-  if (navGroup) {
-      var resetBtn = document.createElement('button');
-      resetBtn.type = 'button';
-      resetBtn.title = 'איפוס תצוגה'; 
-      resetBtn.innerHTML = '<span class="maplibregl-ctrl-icon" aria-hidden="true" style="display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></span>';
-      resetBtn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          isZoomingProgrammatically = true;
-          map.flyTo({ center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], zoom: DEFAULT_ZOOM, bearing: 0, pitch: 0 });
-          map.once('moveend', function() { isZoomingProgrammatically = false; });
-      });
-      navGroup.appendChild(resetBtn);
-  }
-    
   var polygonsGeoJSON = { type: 'FeatureCollection', features: [] };
   var featureMap = {}; // name → GeoJSON feature object
   var pendingPolygonData = null; // set if geo data loads before map
@@ -1333,17 +1310,29 @@ function apiFetch(endpoint) {
 
     // Disputed country borders (West Bank/Gaza outline, Lebanon, Golan): visible but dashed
     // (non-disputed borders and road widths are baked into MAP_STYLE via customizeBasemapLayers)
-    map.addLayer({
-      id: 'boundaries_disputed',
-      type: 'line',
-      source: 'protomaps',
-      'source-layer': 'boundaries',
-      filter: ['all', ['<=', 'kind_detail', 2], ['==', 'disputed', true]],
-      paint: {
-        'line-color': '#777',
-        'line-width': 1.5,
-        'line-dasharray': [4, 3]
-      }
+ map.on('load', function() {
+    mapLoaded = true;
+
+    // 🚨 MOVED HERE: Map is now guaranteed to exist!
+    map.dragRotate.disable();
+    map.touchZoomRotate.disableRotation();
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
+
+    // Re-inject the Custom Reset Button logic inside 'load'
+    var navGroup = document.querySelector('.maplibregl-ctrl-group');
+    if (navGroup) {
+        var resetBtn = document.createElement('button');
+        resetBtn.type = 'button';
+        resetBtn.title = 'איפוס תצוגה'; 
+        resetBtn.innerHTML = '<span class="maplibregl-ctrl-icon" aria-hidden="true" style="display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></span>';
+        resetBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            isZoomingProgrammatically = true;
+            map.flyTo({ center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], zoom: DEFAULT_ZOOM, bearing: 0, pitch: 0 });
+            map.once('moveend', function() { isZoomingProgrammatically = false; });
+        });
+        navGroup.appendChild(resetBtn);
+    }
     }, 'boundaries_country');
 
     map.addSource('alerts-source', { type: 'geojson', data: polygonsGeoJSON });
