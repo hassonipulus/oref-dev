@@ -3148,48 +3148,43 @@ function setLocationState(name, state, since) {
     return red;
   };
 
-  function processHistoryEntry(entry) {
-    if (!entry || !entry.data || !entry.title) return;
-    var title = entry.title.replace(/\s+/g, ' ').trim();
-    var state = classifyTitle(title);
-    // History `data` is a string (single location)
-    var location = normalizeGeresh((typeof entry.data === 'string' ? entry.data : String(entry.data)).trim());
-    var since = parseAlertDate(entry.alertDate) || Date.now();
-    if (state !== 'green' && since > lastDangerTime) lastDangerTime = since;
-    recordHistory(location, title, entry.alertDate || '', state);
+    // 🚨 1. Add this new memory set right above the function
+  var processedHistoryKeys = new Set();
 
-    // Also feed into extendedHistory for timeline, but only if date matches the viewed day
-    // When viewing today, also accept yesterday's entries (cross-midnight: R2 day files
-    // cover 23:00 prev day to 22:59 current day, so history API entries from yesterday
-    // 23:xx belong on today's timeline)
-    var entryDate = (entry.alertDate || '').slice(0, 10);
-    var viewingDate = timelineDate || todayDateStr();
-    var yesterdayDate = new Date(viewingDate + 'T12:00:00Z');
-    yesterdayDate.setUTCDate(yesterdayDate.getUTCDate() - 1);
-    var yesterdayStr = yesterdayDate.toISOString().slice(0, 10);
-    var dateMatch = entryDate === viewingDate || (!timelineDate && entryDate === yesterdayStr);
-    var key = location + '|' + (entry.alertDate || '').replace('T', ' ');
-    if (dateMatch && !extendedRids.has(key) && since) {
-      extendedRids.add(key);
-      extendedHistory.push({ location: location, title: title, alertDate: since, state: state });
+  // 🚨 2. Replace your existing function with this one
+  function processHistoryEntries(entries) {
+    if (!Array.isArray(entries)) return;
+
+    entries.sort(function(a, b) {
+      return (a.alertDate || '').localeCompare(b.alertDate || '');
+    });
+
+    var newEntries = 0;
+    for (var i = 0; i < entries.length; i++) {
+      var entry = entries[i];
+      var alertDate = entry.alertDate || '';
+      
+      if (lastHistoryDate && alertDate < lastHistoryDate) continue;
+
+      // 🚨 THE FIX: Create a unique fingerprint so the exact same alert is NEVER processed twice
+      var uniqueKey = (entry.data || '') + '|' + (entry.title || '') + '|' + alertDate;
+      if (processedHistoryKeys.has(uniqueKey)) continue;
+      processedHistoryKeys.add(uniqueKey);
+
+      processHistoryEntry(entry);
+      newEntries++;
     }
 
-    // Skip expired green markers — don't briefly flash old all-clears on page load
-    var expired = state === 'green' && (Date.now() - since) >= GREEN_FADE_MS;
-    if (isLiveMode) {
-      if (expired) {
-        if (locationStates[location]) removeLocation(location);
-      } else {
-        setLocationState(location, state, since);
-      }
-    } else if (liveLocationStates) {
-      if (expired) {
-        delete liveLocationStates[location];
-      } else {
-        updateShadowState(location, state, since);
-      }
+    if (entries.length > 0) {
+      lastHistoryDate = entries[entries.length - 1].alertDate || lastHistoryDate;
+    }
+
+    if (newEntries > 0) {
+      console.log('History: processed', newEntries, 'new entries');
+      document.dispatchEvent(new CustomEvent('app:stateChanged'));
     }
   }
+
 
   // --- Green fade-out ---
 function fadeGreenMarkers() {
