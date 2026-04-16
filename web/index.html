@@ -4975,13 +4975,14 @@ if ('serviceWorker' in navigator) {
       });
   });
 
-  // 4. Drone Test Button
+    // 4. Drone Test Button
   document.getElementById('dev-test-drone-btn').addEventListener('click', function() {
       triggerTestAlert({
           id: "TEST_" + Date.now(),
           cat: "2",
           title: "חדירת כלי טיס עוין", 
-          data: ["חיפה", "קריות"],
+          // 🚨 THE FIX: Use real polygon names!
+          data: ["חיפה - כרמל ועיר תחתית", "קריית ביאליק"], 
           desc: "היכנסו למרחב המוגן"
       });
   });
