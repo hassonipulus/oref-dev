@@ -1290,46 +1290,60 @@ function apiFetch(endpoint) {
     }
     return scaled;
   
-    function customizeBasemapLayers(layers) {
-    return layers.map(function(l) {
-      // Safely clone paint and layout so we don't crash on undefined properties
-      var paint = Object.assign({}, l.paint || {});
-      var layout = Object.assign({}, l.layout || {});
-      var newLayer = Object.assign({}, l, { paint: paint, layout: layout });
+  function customizeBasemapLayers(layers) {
+    var cleanLayers = [];
 
-      // 1. COMPLETELY FILTER OUT NOISE: Hide POIs and transit stops
-      if (newLayer['source-layer'] === 'pois' || newLayer['source-layer'] === 'transit') {
-          newLayer.layout.visibility = 'none';
-      }
-
-      if (newLayer.type === 'symbol') {
-          // 🚨 THE CRASH FIX: Only apply icon-opacity IF the layer actually has an icon!
-          if (newLayer.layout['icon-image']) {
-              newLayer.paint['icon-opacity'] = 0;
-          }
-          
-          // RESTORE CITY NAMES & FORCE HEBREW
-          if (newLayer.layout['text-field']) {
-              newLayer.layout['text-field'] = ['coalesce', ['get', 'name:he'], ['get', 'name']];
-          }
-      }
-
-      if (newLayer['source-layer'] === 'roads' && newLayer.paint['line-width']) {
-        newLayer.paint['line-width'] = scaleWidthExpr(newLayer.paint['line-width'], 0.4);
-      }
-      if (newLayer.id === 'boundaries_country') {
-        newLayer.filter = ['all', ['<=', 'kind_detail', 2], ['!=', 'disputed', true]];
-        newLayer.paint['line-width'] = 2;
-      }
-      if (newLayer.id === 'boundaries') {
-        newLayer.filter = ['>', 'kind_detail', 2];
-        newLayer.paint['line-width'] = 0.8;
-        newLayer.paint['line-opacity'] = ['step', ['zoom'], 0, 9, 1];
-      }
+    for (var i = 0; i < layers.length; i++) {
+      var orig = layers[i];
       
-      return newLayer;
-    });
+      // 🚨 1. VAPORIZE NOISE: Skip POI and transit layers completely
+      if (orig['source-layer'] === 'pois' || orig['source-layer'] === 'transit') {
+        continue;
+      }
+
+      // 🚨 2. SAFE CLONE: Perfect copy without accidentally creating empty properties
+      var l = JSON.parse(JSON.stringify(orig));
+
+      if (l.type === 'symbol') {
+        // 🚨 3. ERASE ALL DOTS/ICONS: Delete any instruction containing the word 'icon'
+        if (l.layout) {
+          for (var key in l.layout) {
+            if (key.indexOf('icon') === 0) delete l.layout[key];
+          }
+          // RESTORE CITY NAMES & FORCE HEBREW
+          if (l.layout['text-field']) {
+            l.layout['text-field'] = ['coalesce', ['get', 'name:he'], ['get', 'name']];
+          }
+        }
+        if (l.paint) {
+          for (var pKey in l.paint) {
+            if (pKey.indexOf('icon') === 0) delete l.paint[pKey];
+          }
+        }
+      }
+
+      // 4. Apply existing road and border styles
+      if (l['source-layer'] === 'roads' && l.paint && l.paint['line-width']) {
+        l.paint['line-width'] = scaleWidthExpr(l.paint['line-width'], 0.4);
+      }
+      if (l.id === 'boundaries_country') {
+        l.filter = ['all', ['<=', 'kind_detail', 2], ['!=', 'disputed', true]];
+        if (l.paint) l.paint['line-width'] = 2;
+      }
+      if (l.id === 'boundaries') {
+        l.filter = ['>', 'kind_detail', 2];
+        if (l.paint) {
+          l.paint['line-width'] = 0.8;
+          l.paint['line-opacity'] = ['step', ['zoom'], 0, 9, 1];
+        }
+      }
+
+      cleanLayers.push(l);
+    }
+    
+    return cleanLayers;
   }
+
 
   var WARM_FLAVOR = Object.assign({}, (basemaps.themes ? basemaps.themes.light : basemaps.LIGHT), {
     background:            '#f5f0e8',
