@@ -1291,21 +1291,21 @@ function apiFetch(endpoint) {
     return scaled;
   
   function customizeBasemapLayers(layers) {
-    return layers.map(function(l) {
+    function customizeBasemapLayers(layers) {
+    // 🚨 1. COMPLETELY FILTER OUT NOISE: Don't even let POIs or transit stops load
+    var cleanLayers = layers.filter(function(l) {
+        return l['source-layer'] !== 'pois' && l['source-layer'] !== 'transit';
+    });
+
+    return cleanLayers.map(function(l) {
       l = Object.assign({}, l, { paint: Object.assign({}, l.paint), layout: Object.assign({}, l.layout) });
       
-      // 1. Vaporize the POI and Transit layers entirely
-      if (l['source-layer'] === 'pois' || l['source-layer'] === 'transit') {
-          l.layout.visibility = 'none';
-      }
-
       if (l.type === 'symbol') {
-          // 🚨 VAPORIZE THE BLACK DOTS: Delete the icon-image sprite from the layout
-          if (l.layout['icon-image']) {
-              delete l.layout['icon-image'];
-          }
+          // 🚨 2. INVISIBLE DOTS: Instead of deleting the icon, just make it 100% transparent!
+          // This satisfies MapLibre's strict validation engine so it won't crash.
+          l.paint['icon-opacity'] = 0;
           
-          // RESTORE CITY NAMES & FORCE HEBREW
+          // 3. RESTORE CITY NAMES & FORCE HEBREW
           if (l.layout['text-field']) {
               l.layout['text-field'] = ['coalesce', ['get', 'name:he'], ['get', 'name']];
           }
