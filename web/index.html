@@ -1560,17 +1560,130 @@ map.on('click', 'alerts-hit', function(e) {
       var name = validFeature.properties.name;
       if (selectedLocation === name) {
         deselectLocation();
-      } else {
-        openLocationPanel(name);
+  map.on('load', function() {
+    mapLoaded = true;
+    console.log("Map engine started successfully.");
+
+    // 🏔️ Enable 3D Controls (Hold Right-Click to tilt and rotate!)
+    map.dragRotate.enable();
+    map.touchZoomRotate.enableRotation();
+    if (map.touchPitch) map.touchPitch.enable();
+
+    // Add navigation controls (with a compass for 3D orientation)
+    map.addControl(new maplibregl.NavigationControl({ showCompass: true, visualPitch: true }), 'top-left');
+
+    // Custom Reset Button
+    var navGroup = document.querySelector('.maplibregl-ctrl-group');
+    if (navGroup) {
+        var resetBtn = document.createElement('button');
+        resetBtn.type = 'button';
+        resetBtn.title = 'איפוס תצוגה'; 
+        resetBtn.innerHTML = '<span class="maplibregl-ctrl-icon" aria-hidden="true" style="display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></span>';
+        resetBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            isZoomingProgrammatically = true;
+            map.flyTo({ center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], zoom: DEFAULT_ZOOM, bearing: 0, pitch: 0 });
+            map.once('moveend', function() { isZoomingProgrammatically = false; });
+        });
+        navGroup.appendChild(resetBtn);
+    }
+
+    // 🏔️ 1. Add 3D Terrain DEM Source (Free Mapzen/AWS topography)
+    map.addSource('terrain-dem', {
+        type: 'raster-dem',
+        tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+        encoding: 'terrarium',
+        tileSize: 256,
+        maxzoom: 14
+    });
+
+    // 🏔️ 2. Add Hillshade Layer (Draws the shadows and valleys visually)
+    map.addLayer({
+        id: 'hillshading',
+        type: 'hillshade',
+        source: 'terrain-dem',
+        paint: {
+            'hillshade-exaggeration': 0.6,
+            'hillshade-shadow-color': isDarkActive ? '#111111' : '#473b24',
+            'hillshade-highlight-color': isDarkActive ? '#444444' : '#ffffff',
+            'hillshade-illumination-anchor': 'viewport'
+        }
+    }, 'boundaries_country'); // Insert below borders so it doesn't cover them
+
+    // 🏔️ 3. Enable true 3D MapLibre Terrain
+    map.setTerrain({ source: 'terrain-dem', exaggeration: 1.5 });
+
+    // Disputed Borders
+    map.addLayer({
+      id: 'boundaries_disputed',
+      type: 'line',
+      source: 'protomaps',
+      'source-layer': 'boundaries',
+      filter: ['all', ['<=', 'kind_detail', 2], ['==', 'disputed', true]],
+      paint: {
+        'line-color': '#777',
+        'line-width': 1.5,
+        'line-dasharray': [4, 3]
+      }
+    }, 'boundaries_country');
+
+    // GeoJSON Sources
+    map.addSource('alerts-source', { type: 'geojson', data: polygonsGeoJSON });
+
+    map.addLayer({
+      id: 'alerts-fill',
+      type: 'fill',
+      source: 'alerts-source',
+      paint: {
+        'fill-color': ['coalesce', ['feature-state', 'fillColor'], '#888888'],
+        'fill-opacity': ['coalesce', ['feature-state', 'fillOpacity'], 0.01]
       }
     });
-      
+
+    // Invisible Hit Layer (For accurate clicking)
+    map.addLayer({
+      id: 'alerts-hit',
+      type: 'fill',
+      source: 'alerts-source',
+      paint: { 'fill-opacity': 0, 'fill-color': 'transparent' }
+    });
+
+    // 🚨 BORDER BANISHER: The Spiderweb is officially hidden!
+    map.addLayer({
+      id: 'alerts-stroke',
+      type: 'line',
+      source: 'alerts-source',
+      paint: {
+        'line-color': ['coalesce', ['feature-state', 'lineColor'], '#aaaaaa'],
+        // Changed from 0.25 to 0. Faint gray borders are gone!
+        'line-opacity': ['coalesce', ['feature-state', 'lineOpacity'], 0], 
+        'line-width': ['coalesce', ['feature-state', 'lineWidth'], 1]
+      }
+    });
+
+    // Click Handler
+    map.on('click', 'alerts-hit', function(e) {
+      if (menuOpen || drivingModeFeatureEnabled) return;
+      e.originalEvent.stopPropagation();
+      var validFeature = null;
+      for (var i = 0; i < e.features.length; i++) {
+          var fName = e.features[i].properties.name.toLowerCase();
+          if (fName.indexOf('border') !== 0 && fName !== 'israel') {
+              validFeature = e.features[i];
+              break;
+          }
+      }
+      if (!validFeature) return; 
+      var name = validFeature.properties.name;
+      if (selectedLocation === name) deselectLocation();
+      else openLocationPanel(name);
+    });
 
     map.on('mouseenter', 'alerts-hit', function() {
       if (!menuOpen && !drivingModeFeatureEnabled) map.getCanvas().style.cursor = 'pointer';
     });
     map.on('mouseleave', 'alerts-hit', function() { map.getCanvas().style.cursor = ''; });
-      
+
     if (pendingPolygonData) {
       var cb = pendingPolygonCallback;
       pendingPolygonCallback = null;
@@ -1578,6 +1691,7 @@ map.on('click', 'alerts-hit', function(e) {
       pendingPolygonData = null;
     }
   });
+
 
   function updateMapLibreSource() {
     if (!mapLoaded) return;
