@@ -754,6 +754,7 @@ body.dark .menu-check { border-color: #666; }
 body.dark .menu-item.disabled .menu-item-row { opacity: 0.35; }
 body.dark .menu-setting-select { background: #3a3c40; border-color: #555; color: #ddd; }
 body.dark #status { background: rgba(48,50,56,0.92); color: #ddd; }
+body.dark #statusVisitors { color: #aaa; }
 body.dark #menu-visitors-count { color: #6ba6ff; }
 body.dark .menu-visitors-sub { color: #999; }
 body.dark #historyTimeLabel { color: #999 !important; border-top-color: #4a4c50 !important; }
@@ -971,8 +972,10 @@ try {
 <div id="status">
   <span class="indicator indicator-err" id="statusDot"></span>
   <span id="statusText">מתחבר...</span>
+  <div id="statusVisitors" style="display:none; font-size:11.5px; color:#555; margin-top:4px; margin-right:16px;"></div>
   <div id="historyTimeLabel" style="display:none; font-size:11px; color:#555; margin-top:5px; padding-top:5px; border-top:1px solid #ddd;"></div>
 </div>
+
 <div id="errorDetail"></div>
 
 <div id="about-backdrop" class="modal-backdrop">
@@ -1202,7 +1205,7 @@ function apiFetch(endpoint) {
 
   var lastVisitors24h = null;
 
-  function fetchAnalytics() {
+    function fetchAnalytics() {
     return fetch(ANALYTICS_URL).then(function(resp) {
       if (!resp.ok) throw new Error('analytics request failed');
       return resp.json();
@@ -1211,16 +1214,25 @@ function apiFetch(endpoint) {
         lastVisitors24h = data.visitors_24h;
       }
       if (data && typeof data.visitors_1h === 'number') {
+        // Update the hamburger menu
         var el = document.getElementById('menu-visitors-count');
         if (el) {
           el.textContent = data.visitors_1h.toLocaleString('he-IL') + ' 👥';
           el.closest('.menu-item').style.display = '';
+        }
+        
+        // 🚨 NEW: Update the map status box!
+        var statusVisEl = document.getElementById('statusVisitors');
+        if (statusVisEl) {
+          statusVisEl.textContent = data.visitors_1h.toLocaleString('he-IL') + ' מחוברים כעת 👥';
+          statusVisEl.style.display = 'block';
         }
       }
     }).catch(function(err) {
       console.warn('Analytics fetch failed:', err);
     });
   }
+
   
   var analyticsTimer = null;
   function startAnalyticsPolling() {
