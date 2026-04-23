@@ -665,15 +665,28 @@ body.f-predict #menu-predict.f-gated { display: block !important; }
   }
   
   /* 📱 Responsive Menu Panel */
-  #menu-panel { 
+#menu-panel { 
     top: 65px; 
     right: 10px;
-    left: 10px; /* 🚨 This anchors it to both sides so it can't overflow */
+    left: 10px;
     width: auto; 
     max-width: none;
-    max-height: calc(100vh - 90px);
+    
+    /* 🚨 FALLBACK: For very old phones */
+    max-height: calc(100vh - 100px); 
+    /* 🚨 THE FIX: Dynamic Viewport respects the mobile address bar! */
+    max-height: calc(100dvh - 100px); 
+    
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    
+    /* 🚨 Force scrolling on Y, prevent horizontal clipping on X */
+    overflow-y: auto;
+    overflow-x: hidden; 
+    -webkit-overflow-scrolling: touch; 
+    
+    /* 🚨 Respects the physical iPhone/Android home bar area */
+    padding-bottom: calc(20px + env(safe-area-inset-bottom)); 
   }
 
   /* 📏 Fix labels that are too long for small phones */
