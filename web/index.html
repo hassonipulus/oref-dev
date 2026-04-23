@@ -5006,14 +5006,14 @@ if ('serviceWorker' in navigator) {
       });
   }); // <-- This closing bracket was missing!
 
-  // 5. Terrorist Test Button
+    // 5. Terrorist Test Button
   document.getElementById('dev-test-terrorist-btn').addEventListener('click', function() {
       triggerTestAlert({
           id: "TEST_" + Date.now(),
           cat: "3",
           title: "חדירת מחבלים", 
-          // 🚨 Target Sderot and Re'im directly
-          data: ["כיסופים", "רעים"], 
+          // 🚨 Exact official HFC strings for the Gaza Envelope
+          data: ["שדרות, איבים וניר עם", "נתיבות"], 
           desc: "היכנסו מייד למבנה, נעלו את הדלתות וסגרו את החלונות"
       });
   });
