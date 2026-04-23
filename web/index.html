@@ -3326,6 +3326,17 @@ function fadeGreenMarkers() {
         setStatus('green', 'אין התרעות פעילות');
       }
     }
+    // 🚨 NEW: Update the daily alert counter!
+    var alertCountEl = document.getElementById('statusAlertsToday');
+    if (alertCountEl) {
+      if (isViewingToday() && extendedHistory.length > 0) {
+        alertCountEl.textContent = extendedHistory.length + " התרעות היום 📉";
+        alertCountEl.style.display = 'inline-block';
+      } else {
+        alertCountEl.style.display = 'none';
+      }
+    }
+ 
   }
 
   // --- Status indicator ---
