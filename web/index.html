@@ -973,13 +973,15 @@ try {
 <div id="status">
   <span class="indicator indicator-err" id="statusDot"></span>
   <span id="statusText">מתחבר...</span>
-    <div id="statusStats" style="display:flex; justify-content:space-between; gap:12px; font-size:11px; margin-top:6px; padding-top:5px; border-top:1px solid rgba(0,0,0,0.08); direction:rtl;">
+  
+  <div id="statusStats" style="display:flex; justify-content:space-between; gap:12px; font-size:11px; margin-top:6px; padding-top:5px; border-top:1px solid rgba(0,0,0,0.08); direction:rtl;">
     <span id="statusVisitors" style="display:none; color:#555;"></span>
     <span id="statusAlertsToday" style="display:none; color:#ef4444; font-weight:bold;"></span>
   </div>
-
+  
   <div id="historyTimeLabel" style="display:none; font-size:11px; color:#555; margin-top:5px; padding-top:5px; border-top:1px solid #ddd;"></div>
 </div>
+
     
 <div id="errorDetail"></div>
 
@@ -3310,7 +3312,7 @@ function fadeGreenMarkers() {
     if (!isLiveMode) return;
     if (!initialized) return;
     var dominant = null, bestP = -1, residentTotal = 0;
-    var P = { red: 4, brown: 3, purple: 2, yellow: 1, green: 0 };
+    var P = { red: 4, brown: 3, purple: 2, yellow: 1 };
     for (var name in locationStates) {
       var s = locationStates[name].state;
       if (s !== 'green' && (P[s] || 0) > bestP) {
@@ -3338,7 +3340,8 @@ function fadeGreenMarkers() {
         setStatus('green', 'אין התרעות פעילות');
       }
     }
-    // 🚨 NEW: Update the daily alert counter!
+
+    // 🚨 NEW: The Daily Alerts Counter Logic
     var alertCountEl = document.getElementById('statusAlertsToday');
     if (alertCountEl) {
       if (isViewingToday() && extendedHistory.length > 0) {
@@ -3348,9 +3351,7 @@ function fadeGreenMarkers() {
         alertCountEl.style.display = 'none';
       }
     }
- 
-  }
-
+      
   // --- Status indicator ---
   function setStatus(state, text) {
     var dot = document.getElementById('statusDot');
