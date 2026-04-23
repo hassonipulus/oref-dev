@@ -4949,6 +4949,10 @@ if ('serviceWorker' in navigator) {
     <button id="dev-test-drone-btn" style="padding: 10px 16px; background: #9333ea; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; width: 100%; box-shadow: 0 2px 4px rgba(147,51,234,0.3);">
       🚁 טסט כטב״מ (Purple)
     </button>
+    <button id="dev-test-barrage-btn" style="padding: 10px 16px; background: #000000; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.4);">
+      💥 טסט מטח כבד (Chaos)
+    </button>
+
     <button onclick="location.reload()" style="padding: 10px 16px; background: #6b7280; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; width: 100%; box-shadow: 0 2px 4px rgba(107,114,128,0.3);">
       🔄 נקה מפה
     </button>
@@ -5015,6 +5019,20 @@ if ('serviceWorker' in navigator) {
           // 🚨 Exact official HFC strings for the Gaza Envelope
           data: ["רעים", "נתיבות"], 
           desc: "היכנסו מייד למבנה, נעלו את הדלתות וסגרו את החלונות"
+      });
+        // 6. Chaos Barrage Button
+  document.getElementById('dev-test-barrage-btn').addEventListener('click', function() {
+      triggerTestAlert({
+          id: "TEST_CHAOS_" + Date.now(),
+          cat: "1",
+          title: "ירי רקטות וטילים", 
+          // A massive list of guaranteed valid city strings
+          data: [
+            "תל אביב - מרכז", "חיפה - כרמל ועיר תחתית", "ראש העין", 
+            "שדרות, איבים וניר עם", "נתיבות", "צפת - עיר", "אשדוד - יא, יב, טו, יז, מרינה", 
+            "פתח תקווה", "הרצליה - מרכז וגליל ים", "ירושלים - מרכז", "אילת", "קריית שמונה"
+          ], 
+          desc: "מטח כבד ארצי - היכנסו מייד למרחב המוגן"
       });
   });
 </script>
