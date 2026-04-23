@@ -4994,7 +4994,7 @@ if ('serviceWorker' in navigator) {
       });
   });
 
-    // 4. Drone Test Button
+  // 4. Drone Test Button
   document.getElementById('dev-test-drone-btn').addEventListener('click', function() {
       triggerTestAlert({
           id: "TEST_" + Date.now(),
@@ -5004,8 +5004,9 @@ if ('serviceWorker' in navigator) {
           data: ["חיפה - כרמל ועיר תחתית", "קריית ביאליק"], 
           desc: "היכנסו למרחב המוגן"
       });
+  }); // <-- This closing bracket was missing!
 
-          // 5. Terrorist Test Button
+  // 5. Terrorist Test Button
   document.getElementById('dev-test-terrorist-btn').addEventListener('click', function() {
       triggerTestAlert({
           id: "TEST_" + Date.now(),
@@ -5015,10 +5016,6 @@ if ('serviceWorker' in navigator) {
           data: ["שדרות", "רעים"], 
           desc: "היכנסו מייד למבנה, נעלו את הדלתות וסגרו את החלונות"
       });
-  });
-
-  });
-
   });
 </script>
 </body>
