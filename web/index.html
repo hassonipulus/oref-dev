@@ -2640,7 +2640,7 @@ function setLocationState(name, state, since) {
     var existing = locationStates[name];
 
     // Priority: red > purple > yellow. Green always overrides (all-clear).
-    var PRIORITY = { red: 3, purple: 2, yellow: 1, green: 0 };
+    var PRIORITY = { red: 4, brown: 3, purple: 2, yellow: 1, green: 0 };
     if (existing) {
       if (state !== 'green') {
         if (existing.state === state) return;
@@ -3294,14 +3294,14 @@ function fadeGreenMarkers() {
     if (!isLiveMode) return;
     if (!initialized) return;
     var dominant = null, bestP = -1, residentTotal = 0;
-    var P = { red: 3, purple: 2, yellow: 1 };
+    var P = { red: 4, brown: 3, purple: 2, yellow: 1, green: 0l };
     for (var name in locationStates) {
       var s = locationStates[name].state;
       if (s !== 'green' && (P[s] || 0) > bestP) {
         bestP = P[s] || 0;
         dominant = s;
       }
-      if ((s === 'red' || s === 'purple') && locationPopulations) {
+        if ((s === 'red' || s === 'purple' || s === 'brown') && locationPopulations) {
         var pop = locationPopulations[name];
         if (pop) residentTotal += pop;
       }
@@ -3687,7 +3687,7 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
 
   function updateShadowState(name, state, since) {
     if (!liveLocationStates) return;
-    var PRIORITY = { red: 3, purple: 2, yellow: 1, green: 0 };
+    var PRIORITY = { red: 4, brown: 3, purple: 2, yellow: 1, green: 0 };
     var existing = liveLocationStates[name];
     if (existing) {
       if (state === 'green') {
