@@ -663,6 +663,30 @@ body.f-predict #menu-predict.f-gated { display: block !important; }
     bottom: 24px;
     gap: 6px;
   }
+  
+  /* 📱 Responsive Menu Panel */
+  #menu-panel { 
+    top: 65px; 
+    right: 10px;
+    left: 10px; /* 🚨 This anchors it to both sides so it can't overflow */
+    width: auto; 
+    max-width: none;
+    max-height: calc(100vh - 90px);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+
+  /* 📏 Fix labels that are too long for small phones */
+  .menu-item-label {
+    white-space: normal; /* 🚨 Allows text to wrap to a second line instead of pushing the checkmark away */
+    line-height: 1.2;
+    padding-left: 8px;
+  }
+
+  .menu-item-row {
+    padding: 14px 16px; /* Slightly larger tap targets for fingers */
+  }
+
   #legend {
     padding: 8px 12px;
     font-size: 13px;
@@ -674,6 +698,8 @@ body.f-predict #menu-predict.f-gated { display: block !important; }
     transition: max-height 0.3s ease;
     margin-bottom: 3px;
   }
+  /* ... rest of your legend collapsed logic ... */
+
   #legend .dot { width: 12px; height: 12px; }
   #legend.collapsed {
     display: flex; padding: 0;
