@@ -3347,13 +3347,15 @@ function fadeGreenMarkers() {
       if (isViewingToday() && extendedHistory.length > 0) {
         alertCountEl.textContent = extendedHistory.length + " התרעות היום 📉";
         alertCountEl.style.display = 'inline-block';
-      } else {
+            } else {
         alertCountEl.style.display = 'none';
       }
     }
+  }
       
   // --- Status indicator ---
   function setStatus(state, text) {
+
     var dot = document.getElementById('statusDot');
     var txt = document.getElementById('statusText');
     var statusEl = document.getElementById('status');
