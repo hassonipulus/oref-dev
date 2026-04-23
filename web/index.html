@@ -479,6 +479,25 @@ body.f-predict #menu-predict.f-gated { display: block !important; }
   border-top: 1px solid #eee;
   direction: rtl;
 }
+/* 🚨 COMPACT EXPERIMENTAL AREA 🚨 */
+/* 1. Shrink the padding so the rows take up less vertical space */
+#ext-section .menu-sub-panel .menu-item-row { 
+  padding: 8px 16px 8px 28px !important; 
+}
+/* 2. Shrink the icons slightly so they fit the smaller rows */
+#ext-section .menu-sub-panel .menu-item-icon {
+  transform: scale(0.85);
+}
+/* 3. Drop the font size slightly for a clean "sub-settings" look */
+#ext-section .menu-sub-panel .menu-item-label { 
+  font-size: 12px; 
+}
+/* 4. Shrink the search bar inside the sound menu */
+#ext-section #sound-search {
+  padding: 6px;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
 #menu-sound.sound-open .menu-sub-panel { display: block; }
 #ext-section.ext-open > .menu-sub-panel { display: block; }
 /* "אזור ניסיוני" — footer footnote, visually outside the main menu */
