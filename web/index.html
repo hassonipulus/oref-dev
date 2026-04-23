@@ -3294,7 +3294,7 @@ function fadeGreenMarkers() {
     if (!isLiveMode) return;
     if (!initialized) return;
     var dominant = null, bestP = -1, residentTotal = 0;
-    var P = { red: 4, brown: 3, purple: 2, yellow: 1, green: 0l };
+    var P = { red: 4, brown: 3, purple: 2, yellow: 1, green: 0 };
     for (var name in locationStates) {
       var s = locationStates[name].state;
       if (s !== 'green' && (P[s] || 0) > bestP) {
