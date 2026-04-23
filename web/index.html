@@ -930,12 +930,6 @@ try {
       <span class="menu-item-label">אודות</span>
     </button>
   </div>
-  <div id="menu-visitors" class="menu-item" style="display:none">
-    <button class="menu-item-info" id="menu-visitors-row" type="button">
-      <span id="menu-visitors-count"></span>
-      <span class="menu-visitors-sub">בשעה האחרונה</span>
-    </button>
-  </div>
   <div id="ext-section" class="menu-item">
     <button class="menu-item-row" type="button" id="ext-section-btn">
       <span class="menu-item-label">אזור ניסיוני</span>
@@ -1247,14 +1241,7 @@ function apiFetch(endpoint) {
       if (data && typeof data.visitors_24h === 'number') {
         lastVisitors24h = data.visitors_24h;
       }
-      if (data && typeof data.visitors_1h === 'number') {
-        // Update the hamburger menu
-        var el = document.getElementById('menu-visitors-count');
-        if (el) {
-          el.textContent = data.visitors_1h.toLocaleString('he-IL') + ' 👥';
-          el.closest('.menu-item').style.display = '';
-        }
-        
+      if (data && typeof data.visitors_1h === 'number') {        
         // Update the map status box
         var statusVisEl = document.getElementById('statusVisitors');
         if (statusVisEl) {
@@ -4925,11 +4912,6 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
     popPanelHistory();
     openAbout();
   });
-
-  document.getElementById('menu-visitors-row').addEventListener('click', function() {
-    showToast('מספר המבקרים בשעה האחרונה');
-  });
-
 
   init();
   _extInitDone = true;
