@@ -4943,6 +4943,9 @@ if ('serviceWorker' in navigator) {
     <button id="dev-test-rocket-btn" style="padding: 10px 16px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; width: 100%; box-shadow: 0 2px 4px rgba(239,68,68,0.3);">
       🚨 טסט טילים (Red)
     </button>
+    <button id="dev-test-terrorist-btn" style="padding: 10px 16px; background: #8b4513; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; width: 100%; box-shadow: 0 2px 4px rgba(139,69,19,0.3);">
+      🥷 טסט מחבלים (Brown)
+    </button>
     <button id="dev-test-drone-btn" style="padding: 10px 16px; background: #9333ea; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; width: 100%; box-shadow: 0 2px 4px rgba(147,51,234,0.3);">
       🚁 טסט כטב״מ (Purple)
     </button>
@@ -5001,6 +5004,19 @@ if ('serviceWorker' in navigator) {
           data: ["חיפה - כרמל ועיר תחתית", "קריית ביאליק"], 
           desc: "היכנסו למרחב המוגן"
       });
+
+        // 5. Terrorist Test Button
+  document.getElementById('dev-test-terrorist-btn').addEventListener('click', function() {
+      triggerTestAlert({
+          id: "TEST_" + Date.now(),
+          cat: "3", // Arbitrary category for the test
+          title: "חדירת מחבלים", 
+          // Pick a couple of real polygon names from your locations list
+          data: ["רבבה", "ברקן"], 
+          desc: "היכנסו מייד למבנה, נעלו את הדלתות וסגרו את החלונות"
+      });
+  });
+
   });
 </script>
 </body>
