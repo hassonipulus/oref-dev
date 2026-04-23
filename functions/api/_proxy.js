@@ -74,6 +74,12 @@ async function fetchOrefDirect(context, target, kind, colo) {
 function isKnownTitle(title) {
   title = title.replace(/\s+/g, ' ').trim();
 
+  // Brown — terrorist infiltration
+  if (title === 'חדירת מחבלים' ||
+      title === 'חדירת מחבלים - אין לצאת מהמרחב המוגן') {
+    return true;
+  }
+  
   // Green — all-clear / event over
   if (title.includes('האירוע הסתיים') ||
       title.includes('ניתן לצאת') ||
@@ -100,7 +106,6 @@ function isKnownTitle(title) {
   // Red — active danger
   if (title === 'ירי רקטות וטילים' ||
       title === 'נשק לא קונבנציונלי' ||
-      title === 'חדירת מחבלים' ||
       title === 'היכנסו מייד למרחב המוגן' ||
       title === 'היכנסו למרחב המוגן') {
     return true;
