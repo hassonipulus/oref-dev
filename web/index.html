@@ -79,6 +79,7 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
 }
 .dot-red    { background: #ff0000; }
 .dot-purple { background: #9922cc; }
+.dot-brown  { background: #8b4513; }
 .dot-yellow { background: #ffcc00; }
 .dot-green  { background: #00cc00; }
 
@@ -127,6 +128,7 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
 .indicator-red    { background: #ff0000; animation: pulse 3s ease-in-out infinite; }
 .indicator-purple { background: #9922cc; animation: pulse 3s ease-in-out infinite; }
 .indicator-yellow { background: #ffcc00; animation: pulse 3s ease-in-out infinite; }
+.indicator-brown  { background: #8b4513; animation: pulse 3s ease-in-out infinite; }
 .indicator-green  { background: #00cc00; }
 .indicator-err    { background: #999; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
@@ -1002,6 +1004,7 @@ try {
     <div id="legend-icon"><svg viewBox="0 0 24 24" width="24" height="24"><polygon points="12,1 23,12 12,12" fill="#ff0000"/><polygon points="12,1 12,12 1,12" fill="#ffcc00"/><polygon points="1,12 12,12 12,23" fill="#9922cc"/><polygon points="12,12 23,12 12,23" fill="#00cc00"/></svg></div>
     <div class="row"><div class="dot dot-red"></div><span>ירי רקטות וטילים</span></div>
     <div class="row"><div class="dot dot-purple"></div><span>חדירת כטב״מ</span></div>
+    <div class="row"><div class="dot dot-brown"></div><span>חדירת מחבלים</span></div>
     <div class="row"><div class="dot dot-yellow"></div><span>התרעה מוקדמת</span></div>
     <div class="row"><div class="dot dot-green"></div><span>האירוע הסתיים</span></div>
   </div>
@@ -2393,7 +2396,7 @@ function apiFetch(endpoint) {
   };
 
   // --- Colors ---
-  var COLORS = { red: '#ff0000', purple: '#9922cc', yellow: '#ffcc00', green: '#00cc00' };
+  var COLORS = { red: '#ff0000', brown: '#8b4513', purple: '#9922cc', yellow: '#ffcc00', green: '#00cc00' };
   // --- Sound ---
   function getAudioContext() {
     if (!audioCtx) {
@@ -2576,7 +2579,7 @@ function buildPolygons(data, onReady) {
   }
     
   // --- Title classification (RTL Safe) ---
-  function classifyTitle(title) {
+    function classifyTitle(title) {
     title = title.replace(/\s+/g, ' ').trim();
 
     // Green — all-clear / event over (fades out)
@@ -2594,19 +2597,25 @@ function buildPolygons(data, onReady) {
         if (title.includes(yellowTerms[j])) return 'yellow';
     }
 
+    // 🚨 NEW: Brown — Terrorist Infiltration
+    if (title.includes('חדירת מחבלים')) {
+        return 'brown';
+    }
+
     // Purple — Drones
     if (title.includes('כלי טיס') || title.includes('כטב"מ')) {
         return 'purple';
     }
 
-    // Red — active danger
-    var redTerms = ['רקטות וטילים', 'קונבנציונלי', 'חדירת מחבלים', 'היכנסו מייד', 'היכנסו למרחב המוגן'];
+    // Red — active danger (Rockets, etc)
+    var redTerms = ['רקטות וטילים', 'קונבנציונלי', 'היכנסו מייד', 'היכנסו למרחב המוגן'];
     for (var k = 0; k < redTerms.length; k++) {
         if (title.includes(redTerms[k])) return 'red';
     }
 
     return 'red'; // default to danger for unknown
   }
+
     
   // --- Marker management (feature-state) ---
   function applyFeatureStyle(name, state, opacity) {
@@ -3713,8 +3722,8 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
     var onDayHistoryReady = null; // callback when day-history fetch completes
 
     container.classList.add('has-data');
-
-    var TICK_COLORS = { red: '#e74c3c', purple: '#9b59b6', yellow: '#f1c40f', green: '#2ecc71' };
+    
+    var TICK_COLORS = { red: '#e74c3c', brown: '#8b4513', purple: '#9b59b6', yellow: '#f1c40f', green: '#2ecc71' };
     var PLAY_SPEED = 510;
 
     function updateDateNav() {
