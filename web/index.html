@@ -401,7 +401,7 @@ body.idle #unified-panel.slim { opacity: 0; pointer-events: none; transition: op
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
   direction: rtl;
-  width: 180px;
+  width: 240px;
   max-width: calc(100vw - 28px);
   max-height: calc(100vh - 80px);
   overflow-y: auto;
@@ -697,7 +697,12 @@ body.f-predict #menu-predict.f-gated { display: block !important; }
     max-height: 36px;
   }
   #menu-btn { width: 36px; height: 36px; }
-  #menu-panel { top: 56px; }
+    #menu-panel { 
+    top: 56px; 
+    right: 12px;
+    width: calc(100vw - 24px); /* 🚨 Stretches beautifully across the phone screen */
+    max-width: none;
+  }
   #timeline-btn-row {
     height: 36px;
     padding: 0 10px;
