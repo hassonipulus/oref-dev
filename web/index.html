@@ -1138,18 +1138,16 @@ try {
     }
   })();
 
+    // "אזור ניסיוני" section toggle
   document.getElementById('ext-section-btn').addEventListener('click', function() {
     var open = document.getElementById('ext-section').classList.toggle('ext-open');
     document.getElementById('ext-chevron').style.transform = open ? 'rotate(180deg)' : '';
     
+    // 🚨 BULLETPROOF AUTO-SCROLL (Never crashes on mobile)
     if (open) {
       var menuBox = document.getElementById('menu-panel');
-      // Increase the timeout slightly to ensure the menu has finished expanding
       setTimeout(function() {
-        menuBox.scrollTo({ 
-          top: menuBox.scrollHeight + 100, // 🚨 Added +100 for insurance
-          behavior: 'smooth' 
-        });
+        menuBox.scrollTop = menuBox.scrollHeight + 200;
       }, 150); 
     }
   });
