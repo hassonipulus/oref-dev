@@ -973,7 +973,11 @@ try {
 <div id="status">
   <span class="indicator indicator-err" id="statusDot"></span>
   <span id="statusText">מתחבר...</span>
-  <div id="statusVisitors" style="display:none; font-size:11px; color:#555; margin-top:6px; padding-top:5px; border-top:1px solid rgba(0,0,0,0.08); text-align:right;"></div>
+    <div id="statusStats" style="display:flex; justify-content:space-between; gap:12px; font-size:11px; margin-top:6px; padding-top:5px; border-top:1px solid rgba(0,0,0,0.08); direction:rtl;">
+    <span id="statusVisitors" style="display:none; color:#555;"></span>
+    <span id="statusAlertsToday" style="display:none; color:#ef4444; font-weight:bold;"></span>
+  </div>
+
   <div id="historyTimeLabel" style="display:none; font-size:11px; color:#555; margin-top:5px; padding-top:5px; border-top:1px solid #ddd;"></div>
 </div>
     
