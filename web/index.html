@@ -5005,16 +5005,18 @@ if ('serviceWorker' in navigator) {
           desc: "היכנסו למרחב המוגן"
       });
 
-        // 5. Terrorist Test Button
+          // 5. Terrorist Test Button
   document.getElementById('dev-test-terrorist-btn').addEventListener('click', function() {
       triggerTestAlert({
           id: "TEST_" + Date.now(),
-          cat: "3", // Arbitrary category for the test
+          cat: "3",
           title: "חדירת מחבלים", 
-          // Pick a couple of real polygon names from your locations list
+          // 🚨 Target Sderot and Re'im directly
           data: ["שדרות", "רעים"], 
           desc: "היכנסו מייד למבנה, נעלו את הדלתות וסגרו את החלונות"
       });
+  });
+
   });
 
   });
