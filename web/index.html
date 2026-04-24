@@ -1703,27 +1703,28 @@ function apiFetch(endpoint) {
     }
   });
     
-    // 🚨 NEON BREATHING ENGINE
+    // 🚨 NEON BREATHING ENGINE (UPGRADED)
     function animatePulse(timestamp) {
       if (!mapLoaded) return;
       
-      // Create a smooth, infinite wave that glides between 0.0 and 1.0
-      // The '400' controls the speed. (Higher = slower breathing)
-      var wave = (Math.sin(timestamp / 200) + 1) / 2; 
+      // Wave oscillates smoothly between 0.0 and 1.0 (300 makes it beat a bit faster)
+      var wave = (Math.sin(timestamp / 300) + 1) / 2; 
       
-      // Make the blur throb between 2px (sharp) and 8px (wide glow)
-      var currentBlur = 2 + (wave * 6);
+      // Push the blur to extremes: from 0px (sharp edge) to 12px (wide radioactive glow)
+      var currentBlur = wave * 12;
       
-      // Make the thickness swell by 50% during the peak of the breath
-      var pulseMultiplier = 1 + (wave * 0.5);
+      // Instead of multiplying, we ADD up to 6 solid pixels of thickness to the stroke!
+      var addedThickness = wave * 6;
 
-      // Force the GPU to redraw the neon stroke with the new properties
       map.setPaintProperty('alerts-stroke', 'line-blur', currentBlur);
       map.setPaintProperty('alerts-stroke', 'line-width', [
-        '*', 
-        ['coalesce', ['feature-state', 'lineWidth'], 3], 
-        pulseMultiplier
+        '+', 
+        ['coalesce', ['feature-state', 'lineWidth'], 2], 
+        addedThickness
       ]);
+
+      // 🚨 CRITICAL FIX: MapLibre likes to "sleep" to save battery. This forces it to draw the throb!
+      map.triggerRepaint();
 
       // Loop it for the next frame
       requestAnimationFrame(animatePulse);
@@ -1732,11 +1733,6 @@ function apiFetch(endpoint) {
     // Jumpstart the engine!
     animatePulse(0);
 
-  function updateMapLibreSource() {
-    if (!mapLoaded) return;
-    var src = map.getSource('alerts-source');
-    if (src) src.setData(polygonsGeoJSON);
-  }
 
   // --- Toast ---
   function showToast(msg) {
