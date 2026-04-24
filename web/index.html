@@ -191,6 +191,14 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
   min-height: 0;
 }
 
+#unified-panel.city-view-active #up-timeline {
+  display: none !important;
+}
+
+#unified-panel.city-view-active #up-close-row {
+  display: none !important;
+}
+
 /* Handle bar (mobile close target) */
 #up-handle {
   display: none;
@@ -3092,25 +3100,19 @@ function setLocationState(name, state, since) {
 
 function openFullPanel(name) {
     _removePanelHighlight();
+    
+    // 🚨 ADD THIS: Tell the CSS we are in city mode
+    var panel = document.getElementById('unified-panel');
+    panel.classList.add('city-view-active');
+
     if (unifiedPanelState === 'closed') {
-      locationOpenedFromClosed = true; // 🚨 Record that it opened directly
       openTimelineFn({ noSeek: true }); 
-    } else if (unifiedPanelState === 'slim') {
-      locationOpenedFromClosed = false; // 🚨 Record that timeline was already open
     }
-    var panel = document.getElementById('unified-panel');    // Animate height on desktop (slim → full)
-    if (window.innerWidth >= 600 && unifiedPanelState === 'slim') {
-      panel.style.height = panel.offsetHeight + 'px';
-      panel.offsetHeight; // force reflow
-    }
+    
     panel.classList.remove('slim');
     panel.classList.add('full');
-    if (window.innerWidth >= 600) {
-      panel.style.height = ''; // CSS .full sets height: 100vh, transition animates
-    }
     unifiedPanelState = 'full';
-    selectedLocation = name;
-    // Populate header
+    selectedLocation = name;    // Populate header
     document.getElementById('up-location-name').textContent = name;
     var popEl = document.getElementById('up-location-pop');
     var pop = locationPopulations ? locationPopulations[name] : 0;
@@ -3161,12 +3163,11 @@ function openFullPanel(name) {
     }
   }
 
-  function closeUnifiedPanel() {
+function closeUnifiedPanel() {
     var panel = document.getElementById('unified-panel');
-    panel.classList.remove('slim', 'full');
+    panel.classList.remove('slim', 'full', 'city-view-active'); // 🚨 Remove the city-view class
     unifiedPanelState = 'closed';
-    document.body.classList.remove('panel-open');
-    // Deselect location
+    document.body.classList.remove('panel-open');    // Deselect location
     _removePanelHighlight();
     selectedLocation = null;
     _locationEventList = [];
@@ -4725,11 +4726,11 @@ function updateDateNav() {
       document.getElementById('up-handle').addEventListener('click', function() {
         closeTimelinePanel();
       });
-      document.getElementById('up-location-close').addEventListener('click', function(e) {
+     document.getElementById('up-location-close').addEventListener('click', function(e) {
         e.stopPropagation();
-        closeTimelinePanel(); 
-      });        
-    document.getElementById('up-fav-star').addEventListener('click', function(e) {
+        closeUnifiedPanel(); 
+      });
+        document.getElementById('up-fav-star').addEventListener('click', function(e) {
         window._toggleFav(e);
       });
       document.getElementById('up-event-list').addEventListener('click', function(e) {
