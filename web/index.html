@@ -1703,11 +1703,7 @@ function apiFetch(endpoint) {
     }
   });
     
-    // Jumpstart the engine!
-    animatePulse(0);
-
-
-  // --- Toast ---
+    // --- Toast ---
   function showToast(msg) {
     var el = document.createElement('div');
     el.textContent = msg;
@@ -3623,11 +3619,13 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
         if (typeof rebuildTimeline === 'function') {
           rebuildTimeline('none'); 
         }
-        // Finish connecting!
+
+        // 🚨 THIS IS THE CRITICAL LINE THAT WAS LIKELY DELETED!
+        // Finish connecting and turn on the UI!
         if (onDone) onDone();
       })
       .catch(function(err) {
-        historyErrors++;
+          historyErrors++;
         lastErrorMsg = 'Alert history: ' + err.message;
         if (historyErrors > 3) {
           setStatus('err', 'תקלה בטעינת התרעות קודמות. מנסה שוב...');
