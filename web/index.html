@@ -2390,6 +2390,9 @@ function formatDateLabel(dateStr) {
       var todayMap = { he: 'היום', en: 'Today', ar: 'اليوم', ru: 'Сегодня' };
       var todayText = todayMap[currentLang] || 'היום';
       return todayText + ' (' + todayFormatter.format(d) + ')';
+      var historyFormatter = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'numeric', year: 'numeric' });
+      return historyFormatter.format(d);
+        
     }
 
   }
