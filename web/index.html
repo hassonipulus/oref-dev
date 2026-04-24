@@ -3536,9 +3536,7 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
       } else if (liveLocationStates) {
         updateShadowState(loc, state, parseAlertDate(entry.alertDate));
       }
-    }
-  }
-
+ line-height 
   function processHistoryEntries(entries) {
     if (!Array.isArray(entries)) return;
 
@@ -3571,8 +3569,7 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
       document.dispatchEvent(new CustomEvent('app:stateChanged'));
     }
   }
-    
-  function fetchHistory(onDone) {
+        
   function fetchHistory(onDone) {
     apiFetch('history')
       .then(function(resp) {
@@ -3585,34 +3582,45 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
         historyErrors = 0;
         if (initialized && isLiveMode && liveErrors <= 3) updateLiveStatus();
         if (!text) { if (onDone) onDone(); return; }
+        
         var entries;
         try {
           entries = JSON.parse(text);
         } catch (parseErr) {
-          console.warn('History JSON truncated (' + text.length + ' chars), retrying...', parseErr);
+          console.warn('History JSON truncated, retrying...', parseErr);
           return fetch(PROXY_BASE + apiPrefix + '/history', { cache: 'no-store' })
             .then(function(r) { return r.text(); })
             .then(function(t) {
               t = stripBom(t).trim();
               try { entries = JSON.parse(t); }
-              catch (e) { console.error('History retry also failed (' + t.length + ' chars):', e); throw e; }
+              catch (e) { throw e; }
               processHistoryEntries(entries);
               
-              // 🚨 TIMELINE REBUILD (Added inside the retry block)
-              if (typeof rebuildTimeline === 'function') {
-                rebuildTimeline('none'); 
-              }
-              
+              if (typeof rebuildTimeline === 'function') rebuildTimeline('none');
               if (onDone) onDone();
             });
         }
+        
+        // 1. Process the map polygons
         processHistoryEntries(entries);
         
-        // 🚨 TIMELINE REBUILD (Added inside the main success block)
+        // 2. Update the Timeline UI
         if (typeof rebuildTimeline === 'function') {
           rebuildTimeline('none'); 
         }
+
+        // 3. Update the Daily Alerts Counter (using the correct 'entries' variable!)
+        var dailyCounterEl = document.getElementById('statusAlertsToday');
+        if (dailyCounterEl && entries) {
+          if (entries.length > 0) {
+            dailyCounterEl.textContent = entries.length + ' אזעקות היום';
+            dailyCounterEl.style.display = 'block';
+          } else {
+            dailyCounterEl.style.display = 'none';
+          }
+        }
         
+        // Finish connecting!
         if (onDone) onDone();
       })
       .catch(function(err) {
@@ -3621,10 +3629,10 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
         if (historyErrors > 3) {
           setStatus('err', 'תקלה בטעינת התרעות קודמות. מנסה שוב...');
         }
-        console.error('History fetch error:', err);
         if (onDone) setTimeout(function() { fetchHistory(onDone); }, 1000);
       });
 }
+
 
 
   function parseAlertDate(dateStr) {
