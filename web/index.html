@@ -1702,6 +1702,35 @@ function apiFetch(endpoint) {
       pendingPolygonData = null;
     }
   });
+    
+    // 🚨 NEON BREATHING ENGINE
+    function animatePulse(timestamp) {
+      if (!mapLoaded) return;
+      
+      // Create a smooth, infinite wave that glides between 0.0 and 1.0
+      // The '400' controls the speed. (Higher = slower breathing)
+      var wave = (Math.sin(timestamp / 400) + 1) / 2; 
+      
+      // Make the blur throb between 2px (sharp) and 8px (wide glow)
+      var currentBlur = 2 + (wave * 6);
+      
+      // Make the thickness swell by 50% during the peak of the breath
+      var pulseMultiplier = 1 + (wave * 0.5);
+
+      // Force the GPU to redraw the neon stroke with the new properties
+      map.setPaintProperty('alerts-stroke', 'line-blur', currentBlur);
+      map.setPaintProperty('alerts-stroke', 'line-width', [
+        '*', 
+        ['coalesce', ['feature-state', 'lineWidth'], 3], 
+        pulseMultiplier
+      ]);
+
+      // Loop it for the next frame
+      requestAnimationFrame(animatePulse);
+    }
+    
+    // Jumpstart the engine!
+    animatePulse(0);
 
   function updateMapLibreSource() {
     if (!mapLoaded) return;
