@@ -564,10 +564,17 @@ body.f-predict #menu-predict.f-gated { display: block !important; }
 #timeline-transport {
   display: flex;
   align-items: center;
+  justify-content: center; /* 🚨 This snaps the media buttons to the exact middle */
+  gap: 8px; /* A little breathing room between the buttons */
+  margin-top: 6px; /* Keeps them from hugging the bottom of the calendar too tightly */
+}/*
+#timeline-transport {
+  display: flex;
+  align-items: center;
   gap: 6px;
   margin-top: 3px;
   margin-right: 80px;
-}
+}*/
 #timeline-transport button {
   background: none;
   border: 1px solid #ccc;
