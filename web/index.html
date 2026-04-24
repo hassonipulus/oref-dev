@@ -1709,7 +1709,7 @@ function apiFetch(endpoint) {
       
       // Create a smooth, infinite wave that glides between 0.0 and 1.0
       // The '400' controls the speed. (Higher = slower breathing)
-      var wave = (Math.sin(timestamp / 400) + 1) / 2; 
+      var wave = (Math.sin(timestamp / 200) + 1) / 2; 
       
       // Make the blur throb between 2px (sharp) and 8px (wide glow)
       var currentBlur = 2 + (wave * 6);
