@@ -3028,9 +3028,11 @@ function setLocationState(name, state, since) {
     buildLocationEventList(name);
     renderEventList();
     _applyPanelHighlight(name);
-    // If in history mode, sync scroll to current time
+        // If in history mode, sync scroll to current time. If live, scroll to the newest alert!
     if (!isLiveMode && currentViewTime) {
       syncScrollToTime(currentViewTime);
+    } else if (isLiveMode) {
+      syncScrollToTime(Date.now());
     }
     // Hold lock until after desktop height transition completes (~250ms CSS),
     // then release on next rAF to cover any final scroll events
@@ -3839,11 +3841,19 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
       if (extendedHistory.length > 0) {
         extendedHistory.sort(function(a, b) { return a.alertDate - b.alertDate; });
         renderTicks();
-        if (seekMode === 'none') {
+                if (seekMode === 'none') {
           var now = clampTime(Date.now());
           slider.value = sliderFromTime(now);
-          enterHistoryMode(now);
+          
+          // 🚨 THE FIX: If we are live, stay live! Don't overwrite the active map polygons.
+          if (isLiveMode && isViewingToday()) {
+            label.textContent = formatTime(now);
+          } else {
+            enterHistoryMode(now);
+          }
+          
         } else if (eventPeaks.length > 0) {
+else if (eventPeaks.length > 0) {
           if (seekMode === 'first') {
             seekTo(eventPeaks[0]);
           } else {
