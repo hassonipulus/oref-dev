@@ -3653,7 +3653,7 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
     var dateParam = timelineDate || todayDateStr();
     var finalized = false;
 
-        function processEntries(entries) {
+            function processEntries(entries) {
       var added = 0;
       for (var i = 0; i < entries.length; i++) {
         var e = entries[i];
@@ -3662,26 +3662,33 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
         var rid = String(e.rid || '');
         var title = (e.category_desc || '').replace(/\s+/g, ' ').trim();
         var state = classifyTitle(title);
-        var location = normalizeGeresh((typeof e.data === 'string' ? e.data : String(e.data)).trim());
         var ts = parseAlertDate(e.alertDate);
         if (!ts) continue;
         
-        // 🚨 THE FIX: Make the deduplication keys location-specific!
-        var ridKey = rid ? (location + '|' + rid) : '';
-        var compositeKey = location + '|' + (e.alertDate || '').replace('T', ' ');
+        // 🚨 THE FIX: Split grouped cities (e.g. "תל אביב, הרצליה") into separate alerts!
+        var locations = Array.isArray(e.data) ? e.data : String(e.data).split(',').map(function(s) { return s.trim(); });
         
-        if (ridKey && extendedRids.has(ridKey)) continue;
-        if (extendedRids.has(compositeKey)) continue;
-        
-        if (ridKey) extendedRids.add(ridKey);
-        extendedRids.add(compositeKey);
-        
-        extendedHistory.push({ location: location, title: title, alertDate: ts, state: state });
-        recordHistory(location, title, e.alertDate || '', state);
-        added++;
+        for (var j = 0; j < locations.length; j++) {
+            var location = normalizeGeresh(locations[j]);
+            if (!location) continue;
+            
+            var ridKey = rid ? (location + '|' + rid) : '';
+            var compositeKey = location + '|' + (e.alertDate || '').replace('T', ' ');
+            
+            if (ridKey && extendedRids.has(ridKey)) continue;
+            if (extendedRids.has(compositeKey)) continue;
+            
+            if (ridKey) extendedRids.add(ridKey);
+            extendedRids.add(compositeKey);
+            
+            extendedHistory.push({ location: location, title: title, alertDate: ts, state: state });
+            recordHistory(location, title, e.alertDate || '', state);
+            added++;
+        }
       }
       return added;
     }
+
 
 
     function finalize() {
