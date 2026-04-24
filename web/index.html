@@ -2377,7 +2377,11 @@ function apiFetch(endpoint) {
     return !timelineDate || timelineDate === todayDateStr();
   }
 function formatDateLabel(dateStr) {
-    var parts = dateStr.split('-');
+    var parts = dateStr.split('-'); 
+    var year = parts[0];
+    var month = parts[1];
+    var day = parts[2];
+    
     // Create a real Date object (subtract 1 from month because JS months are 0-indexed)
     var d = new Date(parts[0], parts[1] - 1, parts[2]);
     
@@ -2390,9 +2394,7 @@ function formatDateLabel(dateStr) {
       var todayMap = { he: 'היום', en: 'Today', ar: 'اليوم', ru: 'Сегодня' };
       var todayText = todayMap[currentLang] || 'היום';
       return todayText + ' (' + todayFormatter.format(d) + ')';
-      var historyFormatter = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'numeric', year: 'numeric' });
-      return historyFormatter.format(d);
-        
+      return numericDate;        
     }
 
   }
