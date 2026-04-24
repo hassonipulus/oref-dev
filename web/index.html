@@ -176,6 +176,9 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
 #unified-panel.slim #up-handle { display: none; }
 
 /* Full: bottom sheet (mobile default) */
+#unified-panel.full #up-timeline { 
+  display: none !important; 
+}
 #unified-panel.full {
   display: flex;
   bottom: 0; left: 0; right: 0;
@@ -2399,12 +2402,15 @@ function apiFetch(endpoint) {
   // locationPopulations is extracted from _populations in locations_polygons.json (see buildPolygons)
 
   // --- Unified panel state ---
-  var unifiedPanelState = 'closed'; // 'closed' | 'slim' | 'full'
+var unifiedPanelState = 'closed'; // 'closed' | 'slim' | 'full'
   var selectedLocation = null;      // name of location in full mode
   var _scrollSyncLock = false;      // prevent scroll↔slider infinite loop
   var _currentEventIdx = -1;        // index of current-time event in list
-
-  function todayDateStr() {
+  
+  // 🚨 NEW: Tracks if the city was clicked from an empty screen
+  var locationOpenedFromClosed = false;
+    
+function todayDateStr() {
     return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jerusalem' }).format(new Date());
   }
   function isViewingToday() {
@@ -3084,13 +3090,15 @@ function setLocationState(name, state, since) {
     pushPanelHistory();
   }
 
-  function openFullPanel(name) {
+function openFullPanel(name) {
     _removePanelHighlight();
     if (unifiedPanelState === 'closed') {
-      openTimelineFn({ noSeek: true }); // opens slim + renders ticks, but don't seek away from current time
+      locationOpenedFromClosed = true; // 🚨 Record that it opened directly
+      openTimelineFn({ noSeek: true }); 
+    } else if (unifiedPanelState === 'slim') {
+      locationOpenedFromClosed = false; // 🚨 Record that timeline was already open
     }
-    var panel = document.getElementById('unified-panel');
-    // Animate height on desktop (slim → full)
+    var panel = document.getElementById('unified-panel');    // Animate height on desktop (slim → full)
     if (window.innerWidth >= 600 && unifiedPanelState === 'slim') {
       panel.style.height = panel.offsetHeight + 'px';
       panel.offsetHeight; // force reflow
@@ -4106,10 +4114,9 @@ function updateDateNav() {
 
     function openTimeline(opts) {
       // Delegated to openSlimPanel + timeline init logic
-      // opts.noSeek: if true, don't auto-seek to last event (used when opening from location click)
       var noSeek = opts && opts.noSeek;
-      openSlimPanel();
-      updateDateNav();
+      locationOpenedFromClosed = false; // 🚨 Reset the flag when explicitly opening timeline
+      openSlimPanel();      updateDateNav();
       if (!dayHistoryReady) {
         label.textContent = '\u05D8\u05D5\u05E2\u05DF...';
         label.style.opacity = '0.5';
@@ -4710,9 +4717,13 @@ function updateDateNav() {
       });
       document.getElementById('up-location-close').addEventListener('click', function(e) {
         e.stopPropagation();
-        deselectLocation();
+        if (locationOpenedFromClosed) {
+            closeTimelinePanel(); // Closes the entire panel
+        } else {
+            deselectLocation();   // Drops back down to the open timeline
+        }
       });
-      document.getElementById('up-fav-star').addEventListener('click', function(e) {
+        document.getElementById('up-fav-star').addEventListener('click', function(e) {
         window._toggleFav(e);
       });
       // Event row click: seek to that time
