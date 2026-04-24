@@ -1670,17 +1670,31 @@ function apiFetch(endpoint) {
       paint: { 'fill-opacity': 0, 'fill-color': 'transparent' }
     });
 
-    // 🚨 BORDERS VAPORIZED
-    /*map.addLayer({
+      // 🚨 LAYER 1: The Neon Glow (Thick and blurred)
+    map.addLayer({
+      id: 'alerts-glow',
+      type: 'line',
+      source: 'alerts-source',
+      paint: {
+        'line-color': ['coalesce', ['feature-state', 'lineColor'], 'transparent'],
+        'line-opacity': ['coalesce', ['feature-state', 'lineOpacity'], 0], 
+        'line-width': 8,  /* Huge width */
+        'line-blur': 6    /* Heavy blur */
+      }
+    });
+
+    // 🚨 LAYER 2: The Neon Core (Thin and sharp)
+    map.addLayer({
       id: 'alerts-stroke',
       type: 'line',
       source: 'alerts-source',
       paint: {
-        'line-color': ['coalesce', ['feature-state', 'lineColor'], '#aaaaaa'],
+        'line-color': ['coalesce', ['feature-state', 'lineColor'], 'transparent'],
         'line-opacity': ['coalesce', ['feature-state', 'lineOpacity'], 0], 
-        'line-width': ['coalesce', ['feature-state', 'lineWidth'], 1]
+        'line-width': 1.5 /* Sharp solid core */
       }
-    });*/
+    });
+      
     map.addLayer({
       id: 'alerts-stroke',
       type: 'line',
@@ -2764,19 +2778,19 @@ function buildPolygons(data, onReady) {
 
     
   // --- Marker management (feature-state) ---
-  function applyFeatureStyle(name, state, opacity) {
+function applyFeatureStyle(name, state, opacity) {
     var id = nameToId[name];
     if (id === undefined) return;
     map.setFeatureState({ source: 'alerts-source', id: id }, {
       fillColor: COLORS[state],
       fillOpacity: opacity,
       lineColor: COLORS[state],
-      lineOpacity: opacity + 0.15,
-      lineWidth: state === 'red' ? 0.5 : 1
+      // 🚨 Boost the line opacity to 0.9 so the neon stays bright even when the inner fill fades!
+      lineOpacity: state === 'green' ? opacity : 0.9
     });
   }
-
-  function resetFeatureStyle(name) {
+    
+    function resetFeatureStyle(name) {
     var id = nameToId[name];
     if (id === undefined) return;
     map.removeFeatureState({ source: 'alerts-source', id: id });
