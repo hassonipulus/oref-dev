@@ -2381,13 +2381,10 @@ function formatDateLabel(dateStr) {
     var year = parts[0];
     var month = parts[1];
     var day = parts[2];
-    
-    // Create a real Date object (subtract 1 from month because JS months are 0-indexed)
     var d = new Date(parts[0], parts[1] - 1, parts[2]);
-    
-    // Fallback to he-IL if currentLang is 'he' for perfect formatting
     var locale = currentLang === 'he' ? 'he-IL' : currentLang;
-
+    var numericDate = day + '/' + month + '/' + year;
+    
     if (dateStr === todayDateStr()) {
       // For "Today", we omit the year to keep the label clean
       var todayFormatter = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long' });
