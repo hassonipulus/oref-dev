@@ -1694,6 +1694,17 @@ function apiFetch(endpoint) {
         'line-width': 1.5 /* Sharp solid core */
       }
     });
+
+      // 🚨 NEON BREATHING ENGINE
+    function renderNeonBreathing(timestamp) {
+      if (!map.getLayer('alerts-glow')) return; // Safety check
+      var pulseWidth = 8 + Math.sin(timestamp / 250) * 3;
+      var pulseBlur = 6 + Math.sin(timestamp / 250) * 2;
+      map.setPaintProperty('alerts-glow', 'line-width', pulseWidth);
+      map.setPaintProperty('alerts-glow', 'line-blur', pulseBlur);
+      requestAnimationFrame(renderNeonBreathing);
+    }
+    requestAnimationFrame(renderNeonBreathing);
       
     map.addLayer({
       id: 'alerts-stroke',
