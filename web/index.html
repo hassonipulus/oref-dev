@@ -5110,6 +5110,10 @@ function updateDateNav() {
     });
   }
 
+    document.getElementById('menu-about').querySelector('.menu-item-row').addEventListener('click', function() {
+    closeMenu();
+    popPanelHistory();
+            
   init();
   _extInitDone = true;
   _maybeDispatchReady();
