@@ -275,6 +275,27 @@ body.idle #unified-panel.slim { opacity: 0; pointer-events: none; transition: op
 
 /* Desktop overrides */
 @media (min-width: 600px) {
+    /* 📱 MOBILE TWEAKS: Shrink the status box on small screens */
+@media (max-width: 600px) {
+  /* 🚨 UPDATED: Target the main wrapper using your exact ID */
+  #status { 
+    padding: 8px 12px !important;
+    min-width: unset !important;  
+    width: 90% !important;        
+  }
+
+  /* Shrink the main text */
+  #status-text {
+    font-size: 16px !important; 
+  }
+
+  /* Shrink the bottom stats row */
+  #statusStats {
+    font-size: 13px !important;
+    margin-top: 6px !important; 
+  }
+}
+    
   #unified-panel.slim, #unified-panel.full {
     right: 0; bottom: 0;
     width: 320px;
@@ -479,7 +500,6 @@ body.f-predict #menu-predict.f-gated { display: block !important; }
   border-top: 1px solid #eee;
   direction: rtl;
 }
-/* 🚨 COMPACT EXPERIMENTAL AREA 🚨 */
 /* 1. Shrink the padding so the rows take up less vertical space */
 #ext-section .menu-sub-panel .menu-item-row { 
   padding: 8px 16px 8px 28px !important; 
