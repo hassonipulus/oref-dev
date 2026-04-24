@@ -5188,6 +5188,9 @@ if ('serviceWorker' in navigator) {
     <button id="dev-test-barrage-btn" style="padding: 10px 16px; background: #000000; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.4);">
       💥 טסט מטח כבד (Chaos)
     </button>
+    <button id="dev-test-allclear-btn" style="padding: 10px 16px; background: #22c55e; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; width: 100%; box-shadow: 0 2px 4px rgba(34,197,94,0.3);">
+      ✅ טסט סיום אירוע (All Clear)
+    </button>
     <button onclick="location.reload()" style="padding: 10px 16px; background: #6b7280; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; width: 100%; box-shadow: 0 2px 4px rgba(107,114,128,0.3);">
       🔄 נקה מפה
     </button>
@@ -5301,6 +5304,32 @@ if ('serviceWorker' in navigator) {
             "פתח תקווה", "הרצליה - מרכז וגליל ים", "ירושלים - מרכז", "אילת", "קריית שמונה"
           ], 
           desc: "מטח כבד ארצי - היכנסו מייד למרחב המוגן"
+      });
+  });
+
+// 7. All Clear (Hazlash) Button
+  document.getElementById('dev-test-allclear-btn').addEventListener('click', function() {
+      // 1. Ask the engine which cities are currently active
+      var activeLocs = [];
+      if (window.printAlertAllLocations) {
+          activeLocs = window.printAlertAllLocations();
+      }
+
+      // 2. If the map is already quiet, do nothing
+      if (activeLocs.length === 0) {
+          if (window.AppState && window.AppState.showToast) {
+              window.AppState.showToast("אין התרעות פעילות (Map is already clear)");
+          }
+          return;
+      }
+
+      // 3. Inject a massive "Event Over" payload for all active cities
+      triggerTestAlert({
+          id: "TEST_CLEAR_" + Date.now(),
+          cat: "1",
+          title: "האירוע הסתיים", 
+          data: activeLocs, 
+          desc: "ניתן לצאת מהמרחב המוגן"
       });
   });
 </script>
