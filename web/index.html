@@ -564,7 +564,9 @@ body.f-predict #menu-predict.f-gated { display: block !important; }
 #timeline-transport {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center; /* 🚨 Pushes the media controls to the center */
+  gap: 8px; /* Slightly wider gap looks better when centered */
+  margin-top: 6px; /* Adds a tiny bit of breathing room below the date */
 }
 #timeline-transport button {
   background: none;
@@ -633,6 +635,8 @@ body.f-predict #menu-predict.f-gated { display: block !important; }
   border: none;
 }
 #timeline-label {
+  position: absolute;
+  left: 0;
   font-size: 15px;
   font-weight: bold;
   white-space: nowrap;
@@ -641,7 +645,8 @@ body.f-predict #menu-predict.f-gated { display: block !important; }
 #timeline-date-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center; /* 🚨 Pushes the calendar to the exact center */
+  position: relative;
   direction: ltr;
 }
 #timeline-date-nav {
@@ -2372,12 +2377,27 @@ function apiFetch(endpoint) {
   function isViewingToday() {
     return !timelineDate || timelineDate === todayDateStr();
   }
-  function formatDateLabel(dateStr) {
+function formatDateLabel(dateStr) {
     var parts = dateStr.split('-');
-    if (dateStr === todayDateStr()) return '\u05D4\u05D9\u05D5\u05DD (' + parts[2] + '/' + parts[1] + ')';
-    return parts[2] + '/' + parts[1] + '/' + parts[0];
+    // Create a real Date object (subtract 1 from month because JS months are 0-indexed)
+    var d = new Date(parts[0], parts[1] - 1, parts[2]);
+    
+    // Fallback to he-IL if currentLang is 'he' for perfect formatting
+    var locale = currentLang === 'he' ? 'he-IL' : currentLang;
+
+    if (dateStr === todayDateStr()) {
+      // For "Today", we omit the year to keep the label clean
+      var todayFormatter = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long' });
+      var todayMap = { he: 'היום', en: 'Today', ar: 'اليوم', ru: 'Сегодня' };
+      var todayText = todayMap[currentLang] || 'היום';
+      return todayText + ' (' + todayFormatter.format(d) + ')';
+    }
+
+    // For historical dates, show Day, Month (as a word), and Year
+    var historyFormatter = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' });
+    return historyFormatter.format(d);
   }
-  function addDays(dateStr, n) {
+    function addDays(dateStr, n) {
     var d = new Date(dateStr + 'T12:00:00');
     d.setDate(d.getDate() + n);
     return d.toISOString().slice(0, 10);
