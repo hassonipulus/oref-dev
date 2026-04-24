@@ -564,9 +564,8 @@ body.f-predict #menu-predict.f-gated { display: block !important; }
 #timeline-transport {
   display: flex;
   align-items: center;
-  justify-content: center; /* 🚨 Pushes the media controls to the center */
-  gap: 8px; /* Slightly wider gap looks better when centered */
-  margin-top: 6px; /* Adds a tiny bit of breathing room below the date */
+  gap: 6px;
+  margin-top: 3px; /* Adds a tiny bit of breathing room below the date */
 }
 #timeline-transport button {
   background: none;
@@ -645,7 +644,7 @@ body.f-predict #menu-predict.f-gated { display: block !important; }
 #timeline-date-row {
   display: flex;
   align-items: center;
-  justify-content: center; /* 🚨 Pushes the calendar to the exact center */
+  justify-content: center; 
   position: relative;
   direction: ltr;
 }
@@ -2393,9 +2392,6 @@ function formatDateLabel(dateStr) {
       return todayText + ' (' + todayFormatter.format(d) + ')';
     }
 
-    // For historical dates, show Day, Month (as a word), and Year
-    var historyFormatter = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' });
-    return historyFormatter.format(d);
   }
     function addDays(dateStr, n) {
     var d = new Date(dateStr + 'T12:00:00');
