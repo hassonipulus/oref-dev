@@ -1104,12 +1104,14 @@ try {
     </div>
     <div id="timeline-date-row">
       <span id="timeline-label"></span>
-      <div id="timeline-date-nav">
-        <button id="tl-date-prev" title="יום קודם">&#9666;</button>
-        <span id="tl-date-label"></span>
-        <button id="tl-date-next" title="יום הבא">&#9656;</button>
-      </div>
-    </div>
+        <div id="timeline-date-nav">
+        <button id="tl-date-prev" title="יום קודם" style="display: none;">&#9666;</button>
+        <div style="position: relative; display: flex; align-items: center; padding: 0 8px; cursor: pointer;">
+          <input type="date" id="tl-date-input" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;">
+          <span id="tl-date-label">📅 בחר תאריך</span>
+        </div>
+        <button id="tl-date-next" title="יום הבא" style="display: none;">&#9656;</button>
+      </div>    </div>
     <div id="timeline-transport">
       <button id="tl-prev" title="אירוע קודם">⏮</button>
       <button id="tl-play" title="נגן/עצור">▶</button>
@@ -3854,7 +3856,7 @@ function processEntries(entries) {
     var datePrevBtn = document.getElementById('tl-date-prev');
     var dateNextBtn = document.getElementById('tl-date-next');
     var dateLabel = document.getElementById('tl-date-label');
-
+    var dateInput = document.getElementById('tl-date-input'); // 🚨 NEW: Grab the calendar
     var onDayHistoryReady = null; // callback when day-history fetch completes
 
     container.classList.add('has-data');
@@ -3862,11 +3864,28 @@ function processEntries(entries) {
     var TICK_COLORS = { red: '#e74c3c', brown: '#8b4513', purple: '#9b59b6', yellow: '#f1c40f', green: '#2ecc71' };
     var PLAY_SPEED = 510;
 
-    function updateDateNav() {
+function updateDateNav() {
       var d = timelineDate || todayDateStr();
-      dateLabel.textContent = formatDateLabel(d);
-      datePrevBtn.disabled = (d <= DAY_HISTORY_MIN_DATE);
-      dateNextBtn.disabled = isViewingToday();
+      
+      // Update the invisible calendar to the currently viewed date and set min/max limits
+      dateInput.value = d;
+      dateInput.max = todayDateStr();
+      dateInput.min = DAY_HISTORY_MIN_DATE;
+
+      if (isViewingToday()) {
+         // UI State 1: Today (No arrows, big calendar prompt)
+         dateLabel.innerHTML = '📅 בחר תאריך';
+         datePrevBtn.style.display = 'none';
+         dateNextBtn.style.display = 'none';
+      } else {
+         // UI State 2: History (Show arrows and the formatted date)
+         dateLabel.innerHTML = '📅 ' + formatDateLabel(d);
+         datePrevBtn.style.display = 'block';
+         dateNextBtn.style.display = 'block';
+         
+         datePrevBtn.disabled = (d <= DAY_HISTORY_MIN_DATE);
+         dateNextBtn.disabled = isViewingToday();
+      }
     }
     updateDateNav();
 
@@ -4160,6 +4179,21 @@ function processEntries(entries) {
     };
 
     // --- Date nav buttons ---
+    // 🚨 NEW: Calendar Selection Listener
+    dateInput.addEventListener('change', function(e) {
+      var selectedDate = e.target.value;
+      if (!selectedDate) return;
+      
+      // Safety net: Prevent them from picking a future date or going too far back
+      if (selectedDate > todayDateStr()) selectedDate = todayDateStr();
+      if (selectedDate < DAY_HISTORY_MIN_DATE) selectedDate = DAY_HISTORY_MIN_DATE;
+
+      // If they picked a new date, load it!
+      if (selectedDate !== (timelineDate || todayDateStr())) {
+        switchDate(selectedDate);
+      }
+    });
+      
     datePrevBtn.addEventListener('click', function(e) {
       e.stopPropagation();
       var cur = timelineDate || todayDateStr();
