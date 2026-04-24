@@ -4790,10 +4790,6 @@ function updateDateNav() {
     localStorage.setItem('tapHintShown', '1');
     hint.addEventListener('animationend', function() { hint.remove(); });
   }
-
-  document.getElementById('about-backdrop').addEventListener('click', function(e) {
-    if (e.target === this) closeAbout();
-  });
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
       closeAbout();
@@ -5010,6 +5006,7 @@ function updateDateNav() {
   });
 */
   // --- Pause polling when tab is hidden; resume when visible ---
+    
   document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'hidden') {
       pausePolling();
