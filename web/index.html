@@ -5000,12 +5000,14 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
     closeMenu();
     popPanelHistory();
     openAbout();
-  });
 
-  init();
+      } // 🚨 THIS IS THE MAGIC BRACKET! It forces the broken function above to close.
+
+Init();
   _extInitDone = true;
   _maybeDispatchReady();
 })();
+
 </script>
 
 <script>
