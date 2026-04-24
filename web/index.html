@@ -191,10 +191,8 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
   min-height: 0;
 }
 
-#unified-panel.city-view-active #up-timeline {
-  display: none !important;
-}
-
+#unified-panel.city-view-active #up-timeline,
+#unified-panel.city-view-active #timeline-transport,
 #unified-panel.city-view-active #up-close-row {
   display: none !important;
 }
@@ -3165,17 +3163,18 @@ function openFullPanel(name) {
 
 function closeUnifiedPanel() {
     var panel = document.getElementById('unified-panel');
-    panel.classList.remove('slim', 'full', 'city-view-active'); // 🚨 Remove the city-view class
+    
+    panel.classList.remove('slim', 'full', 'city-view-active'); 
+    
     unifiedPanelState = 'closed';
-    document.body.classList.remove('panel-open');    // Deselect location
+    document.body.classList.remove('panel-open');
+    
     _removePanelHighlight();
     selectedLocation = null;
     _locationEventList = [];
     _currentEventIdx = -1;
     document.getElementById('up-event-list').innerHTML = '';
-    // closeTimeline logic is called from within initTimeline
   }
-
   // Wrappers that existing code calls
 function openLocationPanel(name) {
     _removePanelHighlight();
@@ -4726,7 +4725,7 @@ function updateDateNav() {
       document.getElementById('up-handle').addEventListener('click', function() {
         closeTimelinePanel();
       });
-     document.getElementById('up-location-close').addEventListener('click', function(e) {
+      document.getElementById('up-location-close').addEventListener('click', function(e) {
         e.stopPropagation();
         closeUnifiedPanel(); 
       });
