@@ -3515,7 +3515,7 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
     
     var processedHistoryKeys = new Set();  
     
-    function processHistoryEntry(entry) {
+      function processHistoryEntry(entry) {
     if (!entry || !entry.data || !entry.title) return;
     
     var title = (entry.title + ' ' + (entry.desc || '')).replace(/\s+/g, ' ').trim();
@@ -3531,13 +3531,23 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
       
       recordHistory(loc, cleanTitle, entry.alertDate || '', state);
       
-                if (isLiveMode) {
-            setLocationState(loc, state, parseAlertDate(entry.alertDate));
-          } else if (liveLocationStates) {
-            updateShadowState(loc, state, parseAlertDate(entry.alertDate));
+      // 🚨 THE TIMELINE BRIDGE: Feed today's live alerts directly into the timeline memory!
+      var ts = parseAlertDate(entry.alertDate);
+      if (ts && isViewingToday()) {
+          var compositeKey = loc + '|' + (entry.alertDate || '').replace('T', ' ');
+          if (!extendedRids.has(compositeKey)) {
+              extendedRids.add(compositeKey);
+              extendedHistory.push({ location: loc, title: cleanTitle, alertDate: ts, state: state });
           }
-        } // 🚨 Closes the for-loop
-      } // 🚨 Closes processHistoryEntry
+      }
+      
+      if (isLiveMode) {
+        setLocationState(loc, state, parseAlertDate(entry.alertDate));
+      } else if (liveLocationStates) {
+        updateShadowState(loc, state, parseAlertDate(entry.alertDate));
+      }
+    }
+  }
 
   function processHistoryEntries(entries) {
     if (!Array.isArray(entries)) return;
@@ -3567,10 +3577,15 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
     }
 
     if (newEntries > 0) {
+      // 🚨 RESORT THE TIMELINE: Keep the slider perfectly in order when new alerts are injected!
+      if (isViewingToday()) {
+          extendedHistory.sort(function(a, b) { return a.alertDate - b.alertDate; });
+      }
       console.log('History: processed', newEntries, 'new entries');
       document.dispatchEvent(new CustomEvent('app:stateChanged'));
     }
   }
+
         
   function fetchHistory(onDone) {
     apiFetch('history')
