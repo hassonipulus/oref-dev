@@ -3571,6 +3571,7 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
   }
     
   function fetchHistory(onDone) {
+  function fetchHistory(onDone) {
     apiFetch('history')
       .then(function(resp) {
         lastCfColo = resp.headers.get('X-CF-Colo') || lastCfColo;
@@ -3594,16 +3595,24 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
               try { entries = JSON.parse(t); }
               catch (e) { console.error('History retry also failed (' + t.length + ' chars):', e); throw e; }
               processHistoryEntries(entries);
+              
+              // 🚨 TIMELINE REBUILD (Added inside the retry block)
+              if (typeof rebuildTimeline === 'function') {
+                rebuildTimeline('none'); 
+              }
+              
               if (onDone) onDone();
             });
         }
         processHistoryEntries(entries);
+        
+        // 🚨 TIMELINE REBUILD (Added inside the main success block)
+        if (typeof rebuildTimeline === 'function') {
+          rebuildTimeline('none'); 
+        }
+        
         if (onDone) onDone();
       })
-    // Force the visual timeline to calculate and draw the new peaks
-  if (typeof rebuildTimeline === 'function') {
-    rebuildTimeline('none'); 
-  }
       .catch(function(err) {
         historyErrors++;
         lastErrorMsg = 'Alert history: ' + err.message;
@@ -3613,7 +3622,8 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
         console.error('History fetch error:', err);
         if (onDone) setTimeout(function() { fetchHistory(onDone); }, 1000);
       });
-  }
+}
+
 
   function parseAlertDate(dateStr) {
     // Format: "2026-03-03 12:34:56"
