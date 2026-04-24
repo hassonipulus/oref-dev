@@ -3581,7 +3581,7 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
   }
 
         
-  function fetchHistory(onDone) {
+function fetchHistory(onDone) {
     apiFetch('history')
       .then(function(resp) {
         lastCfColo = resp.headers.get('X-CF-Colo') || lastCfColo;
@@ -3620,21 +3620,18 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
           rebuildTimeline('none'); 
         }
 
-        // 🚨 THIS IS THE CRITICAL LINE THAT WAS LIKELY DELETED!
-        // Finish connecting and turn on the UI!
+        // 3. Finish connecting!
         if (onDone) onDone();
       })
       .catch(function(err) {
-          historyErrors++;
+        historyErrors++;
         lastErrorMsg = 'Alert history: ' + err.message;
         if (historyErrors > 3) {
           setStatus('err', 'תקלה בטעינת התרעות קודמות. מנסה שוב...');
         }
         if (onDone) setTimeout(function() { fetchHistory(onDone); }, 1000);
       });
-}
-
-
+  }
 
   function parseAlertDate(dateStr) {
     // Format: "2026-03-03 12:34:56"
