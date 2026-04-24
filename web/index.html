@@ -3841,19 +3841,17 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
       if (extendedHistory.length > 0) {
         extendedHistory.sort(function(a, b) { return a.alertDate - b.alertDate; });
         renderTicks();
-                if (seekMode === 'none') {
+        if (seekMode === 'none') {
           var now = clampTime(Date.now());
           slider.value = sliderFromTime(now);
           
-          // 🚨 THE FIX: If we are live, stay live! Don't overwrite the active map polygons.
-          if (isLiveMode && isViewingToday()) {
+          if (isLiveMode) {
             label.textContent = formatTime(now);
           } else {
             enterHistoryMode(now);
           }
           
         } else if (eventPeaks.length > 0) {
-else if (eventPeaks.length > 0) {
           if (seekMode === 'first') {
             seekTo(eventPeaks[0]);
           } else {
