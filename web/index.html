@@ -3600,6 +3600,10 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
         processHistoryEntries(entries);
         if (onDone) onDone();
       })
+    // Force the visual timeline to calculate and draw the new peaks
+  if (typeof rebuildTimeline === 'function') {
+    rebuildTimeline('none'); 
+  }
       .catch(function(err) {
         historyErrors++;
         lastErrorMsg = 'Alert history: ' + err.message;
