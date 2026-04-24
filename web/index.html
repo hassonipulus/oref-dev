@@ -3531,12 +3531,14 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
       
       recordHistory(loc, cleanTitle, entry.alertDate || '', state);
       
-      if (isLiveMode) {
-        setLocationState(loc, state, parseAlertDate(entry.alertDate));
-      } else if (liveLocationStates) {
-        updateShadowState(loc, state, parseAlertDate(entry.alertDate));
-      }
- line-height 
+                if (isLiveMode) {
+            setLocationState(loc, state, parseAlertDate(entry.alertDate));
+          } else if (liveLocationStates) {
+            updateShadowState(loc, state, parseAlertDate(entry.alertDate));
+          }
+        } // 🚨 Closes the for-loop
+      } // 🚨 Closes processHistoryEntry
+
   function processHistoryEntries(entries) {
     if (!Array.isArray(entries)) return;
 
@@ -5006,6 +5008,7 @@ Init();
   _extInitDone = true;
   _maybeDispatchReady();
 })();
+
 
 </script>
 
