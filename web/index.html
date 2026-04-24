@@ -275,20 +275,19 @@ body.idle #unified-panel.slim { opacity: 0; pointer-events: none; transition: op
 
 /* Desktop overrides */
 @media (max-width: 600px) {
-  #status { 
-    padding: 8px 12px !important;
-    min-width: unset !important;  
-    width: 90% !important;        
+padding: 6px 12px !important; 
+    min-width: 0 !important;      /* Kills any forced width */
+    width: auto !important;       /* 🚨 THE FIX: Lets it shrink to hug the text tightly */
+    max-width: 90% !important;    /* Prevents it from hitting the edges if the text gets long */
   }
   #status-text {
-    font-size: 16px !important; 
+    font-size: 15px !important; 
   }
   #statusStats {
-    font-size: 13px !important;
-    margin-top: 6px !important; 
+    font-size: 12px !important;
+    margin-top: 4px !important; 
   }
-}
-    
+}    
   #unified-panel.slim, #unified-panel.full {
     right: 0; bottom: 0;
     width: 320px;
