@@ -1693,16 +1693,23 @@ function apiFetch(endpoint) {
     map.on('mouseenter', 'alerts-hit', function() {
       if (!menuOpen && !drivingModeFeatureEnabled) map.getCanvas().style.cursor = 'pointer';
     });
+      
     map.on('mouseleave', 'alerts-hit', function() { map.getCanvas().style.cursor = ''; });
 
+    // 🚨 THIS IS THE CRITICAL BRIDGE WE ACCIDENTALLY DELETED!
     if (pendingPolygonData) {
       var cb = pendingPolygonCallback;
       pendingPolygonCallback = null;
       buildPolygons(pendingPolygonData, cb);
       pendingPolygonData = null;
     }
-  });
+  });  
     
+    function updateMapLibreSource() {
+    if (!mapLoaded) return;
+    var src = map.getSource('alerts-source');
+    if (src) src.setData(polygonsGeoJSON);
+  }
     // --- Toast ---
   function showToast(msg) {
     var el = document.createElement('div');
