@@ -3579,8 +3579,6 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
       document.dispatchEvent(new CustomEvent('app:stateChanged'));
     }
   }
-
-        
 function fetchHistory(onDone) {
     apiFetch('history')
       .then(function(resp) {
@@ -3591,7 +3589,12 @@ function fetchHistory(onDone) {
       .then(function(text) {
         text = stripBom(text).trim();
         historyErrors = 0;
-        if (initialized && isLiveMode && liveErrors <= 3) updateLiveStatus();
+        
+        // 🚨 BRUTE-FORCE UI WAKE-UP
+        // Force the app to acknowledge it is connected right now, no waiting!
+        initialized = true;
+        updateLiveStatus();
+
         if (!text) { if (onDone) onDone(); return; }
         
         var entries;
@@ -3620,7 +3623,7 @@ function fetchHistory(onDone) {
           rebuildTimeline('none'); 
         }
 
-        // 3. Finish connecting!
+        // 3. Finish connection
         if (onDone) onDone();
       })
       .catch(function(err) {
