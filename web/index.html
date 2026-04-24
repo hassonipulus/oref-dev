@@ -174,12 +174,12 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
 }
 #unified-panel.slim #up-location { display: none; }
 #unified-panel.slim #up-handle { display: none; }
-
-/* Full: bottom sheet (mobile default) */
-#unified-panel.full #up-timeline { 
-  display: none !important; 
+#unified-panel.full #up-timeline {
+  display: none !important;
 }
-#unified-panel.full {
+#unified-panel.full #up-location {
+  display: flex !important;
+}#unified-panel.full {
   display: flex;
   bottom: 0; left: 0; right: 0;
   max-height: 55vh;
@@ -3176,10 +3176,20 @@ function openFullPanel(name) {
   }
 
   // Wrappers that existing code calls
-  function openLocationPanel(name) {
+function openLocationPanel(name) {
+    _removePanelHighlight();
+    
+    // If the panel is closed, we open it but keep the timeline part hidden
+    if (unifiedPanelState === 'closed') {
+      var panel = document.getElementById('unified-panel');
+      panel.classList.add('slim');
+      unifiedPanelState = 'slim';
+      document.body.classList.add('panel-open');
+    }
+
+    // Now switch to the full City view
     openFullPanel(name);
   }
-
   function closeLocationPanel() {
     if (selectedLocation) deselectLocation();
   }
@@ -4717,16 +4727,11 @@ function updateDateNav() {
       });
       document.getElementById('up-location-close').addEventListener('click', function(e) {
         e.stopPropagation();
-        if (locationOpenedFromClosed) {
-            closeTimelinePanel(); // Closes the entire panel
-        } else {
-            deselectLocation();   // Drops back down to the open timeline
-        }
-      });
-        document.getElementById('up-fav-star').addEventListener('click', function(e) {
+        closeTimelinePanel(); 
+      });        
+    document.getElementById('up-fav-star').addEventListener('click', function(e) {
         window._toggleFav(e);
       });
-      // Event row click: seek to that time
       document.getElementById('up-event-list').addEventListener('click', function(e) {
         var row = e.target.closest('.up-event-row');
         if (!row) return;
