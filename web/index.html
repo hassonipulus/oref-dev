@@ -274,22 +274,15 @@ body.panel-open #legend { display: none; }
 body.idle #unified-panel.slim { opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
 
 /* Desktop overrides */
-@media (min-width: 600px) {
-    /* 📱 MOBILE TWEAKS: Shrink the status box on small screens */
 @media (max-width: 600px) {
-  /* 🚨 UPDATED: Target the main wrapper using your exact ID */
   #status { 
     padding: 8px 12px !important;
     min-width: unset !important;  
     width: 90% !important;        
   }
-
-  /* Shrink the main text */
   #status-text {
     font-size: 16px !important; 
   }
-
-  /* Shrink the bottom stats row */
   #statusStats {
     font-size: 13px !important;
     margin-top: 6px !important; 
