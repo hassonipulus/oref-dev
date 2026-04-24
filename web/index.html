@@ -4998,17 +4998,16 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
   }
 
   // --- Menu: About ---
-  document.getElementById('menu-about').querySelector('.menu-item-row').addEventListener('click', function() {
+    document.getElementById('menu-about').querySelector('.menu-item-row').addEventListener('click', function() {
     closeMenu();
     popPanelHistory();
     openAbout();
   });
-}
-init();  // 🚨 Changed to lowercase 'i'
+
+  init();
   _extInitDone = true;
   _maybeDispatchReady();
 })();
-
 </script>
 
 <script>
