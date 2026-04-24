@@ -1402,11 +1402,11 @@ function apiFetch(endpoint) {
         if (l.layout) {
           for (var key in l.layout) {
             if (key.indexOf('icon') === 0) delete l.layout[key];
-          }
+          }/*
           // RESTORE CITY NAMES & FORCE HEBREW
           if (l.layout['text-field']) {
             l.layout['text-field'] = ['coalesce', ['get', 'name:he'], ['get', 'name']];
-          }
+          }*/
         }
         if (l.paint) {
           for (var pKey in l.paint) {
