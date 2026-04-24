@@ -274,10 +274,12 @@ body.panel-open #legend { display: none; }
 body.idle #unified-panel.slim { opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
 
 /* Desktop overrides */
+/* 📱 Mobile Overrides */
 @media (max-width: 600px) {
-padding: 3px 6px !important; 
+  #status {
+    padding: 3px 6px !important; 
     min-width: 0 !important;      /* Kills any forced width */
-    width: auto !important;       /* 🚨 THE FIX: Lets it shrink to hug the text tightly */
+    width: auto !important;       /* Lets it shrink to hug the text tightly */
     max-width: 90% !important;    /* Prevents it from hitting the edges if the text gets long */
   }
   #status-text {
@@ -287,8 +289,7 @@ padding: 3px 6px !important;
     font-size: 9px !important;
     margin-top: 2px !important; 
   }
-}
-    #legend {
+  #legend {
     padding: 6px 10px !important;
     font-size: 12px !important;
     line-height: 1.3 !important;
@@ -4752,18 +4753,6 @@ function updateDateNav() {
   }
 
   // --- About control ---
-  function openAbout() {
-    var statEl = document.getElementById('about-visitors-stat');
-    if (statEl && lastVisitors24h !== null) {
-      statEl.querySelector('.stat-number').textContent = lastVisitors24h.toLocaleString('he-IL');
-      statEl.style.display = 'block';
-    }
-    document.getElementById('about-backdrop').classList.add('visible');
-  }
-  function closeAbout() {
-    document.getElementById('about-backdrop').classList.remove('visible');
-  }
-
   document.getElementById('status').addEventListener('click', function() {
     var detail = document.getElementById('errorDetail');
     var dot = document.getElementById('statusDot');
@@ -4792,7 +4781,6 @@ function updateDateNav() {
   }
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-      closeAbout();
       if (menuOpen) {
         if (soundSubPanelOpen) {
           closeSoundSubPanel();
@@ -5103,12 +5091,10 @@ function updateDateNav() {
     });
   }
        
-  init();
+init();
   _extInitDone = true;
   _maybeDispatchReady();
-})();
 </script>
-
 <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js');
