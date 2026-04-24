@@ -2089,7 +2089,9 @@ function apiFetch(endpoint) {
       followResumeTimer = null;
     }
   }
-
+    
+  var _menuWakeLock = null;
+    
   function updateZoomMenuState() {
     var effectiveMode = getEffectiveZoomMode();
     menuZoomLabelEl.textContent = 'זום אוטומטי';
