@@ -1703,33 +1703,6 @@ function apiFetch(endpoint) {
     }
   });
     
-    // 🚨 NEON BREATHING ENGINE (UPGRADED)
-    function animatePulse(timestamp) {
-      if (!mapLoaded) return;
-      
-      // Wave oscillates smoothly between 0.0 and 1.0 (300 makes it beat a bit faster)
-      var wave = (Math.sin(timestamp / 300) + 1) / 2; 
-      
-      // Push the blur to extremes: from 0px (sharp edge) to 12px (wide radioactive glow)
-      var currentBlur = wave * 12;
-      
-      // Instead of multiplying, we ADD up to 6 solid pixels of thickness to the stroke!
-      var addedThickness = wave * 6;
-
-      map.setPaintProperty('alerts-stroke', 'line-blur', currentBlur);
-      map.setPaintProperty('alerts-stroke', 'line-width', [
-        '+', 
-        ['coalesce', ['feature-state', 'lineWidth'], 2], 
-        addedThickness
-      ]);
-
-      // 🚨 CRITICAL FIX: MapLibre likes to "sleep" to save battery. This forces it to draw the throb!
-      map.triggerRepaint();
-
-      // Loop it for the next frame
-      requestAnimationFrame(animatePulse);
-    }
-    
     // Jumpstart the engine!
     animatePulse(0);
 
