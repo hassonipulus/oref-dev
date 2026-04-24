@@ -668,6 +668,14 @@ body.f-predict #menu-predict.f-gated { display: block !important; }
 #timeline-date-nav button:active { background: #fcd34d; }
 #timeline-date-nav button:disabled { opacity: 0.3; cursor: default; }
 #timeline-date-nav button:disabled:hover { background: none; }
+#tl-date-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
 #tl-date-label {
   font-size: 13px;
   font-weight: 600;
@@ -1106,11 +1114,12 @@ try {
       <span id="timeline-label"></span>
         <div id="timeline-date-nav">
         <button id="tl-date-prev" title="יום קודם" style="display: none;">&#9666;</button>
-        <div style="position: relative; display: flex; align-items: center; padding: 0 8px; cursor: pointer;">
+        <div id="tl-date-wrapper" style="position: relative; display: flex; align-items: center; padding: 0 8px; cursor: pointer;">
           <input type="date" id="tl-date-input" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;">
           <span id="tl-date-label">📅 בחר תאריך</span>
         </div>
         <button id="tl-date-next" title="יום הבא" style="display: none;">&#9656;</button>
+      </div>        <button id="tl-date-next" title="יום הבא" style="display: none;">&#9656;</button>
       </div>    </div>
     <div id="timeline-transport">
       <button id="tl-prev" title="אירוע קודם">⏮</button>
@@ -4179,6 +4188,16 @@ function updateDateNav() {
     };
 
     // --- Date nav buttons ---
+    // 🚨 NEW: Force the calendar to open on desktop browsers
+    document.getElementById('tl-date-wrapper').addEventListener('click', function() {
+      try {
+        dateInput.showPicker();
+      } catch (e) {
+        // Fallback for older browsers
+        dateInput.focus();
+      }
+    });
+      
     // 🚨 NEW: Calendar Selection Listener
     dateInput.addEventListener('change', function(e) {
       var selectedDate = e.target.value;
