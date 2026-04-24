@@ -3516,23 +3516,19 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
     
     var processedHistoryKeys = new Set();  
     
-      function processHistoryEntry(entry) {
+function processHistoryEntry(entry) {
     if (!entry || !entry.data || !entry.title) return;
-    
     var title = (entry.title + ' ' + (entry.desc || '')).replace(/\s+/g, ' ').trim();
     var state = classifyTitle(title);
-    
-    // History API sometimes returns comma-separated strings instead of arrays
     var locations = Array.isArray(entry.data) ? entry.data : entry.data.split(',').map(function(s) { return s.trim(); });
     var cleanTitle = entry.title.replace(/\s+/g, ' ').trim();
     
     for (var i = 0; i < locations.length; i++) {
       var loc = normalizeGeresh(locations[i]);
       if (!loc) continue;
-      
       recordHistory(loc, cleanTitle, entry.alertDate || '', state);
       
-      // 🚨 THE TIMELINE BRIDGE: Feed today's live alerts directly into the timeline memory!
+      // 🚨 THE BRIDGE: This makes today's alerts show up on the slider!
       var ts = parseAlertDate(entry.alertDate);
       if (ts && isViewingToday()) {
           var compositeKey = loc + '|' + (entry.alertDate || '').replace('T', ' ');
@@ -3671,34 +3667,29 @@ function fetchHistory(onDone) {
     var dateParam = timelineDate || todayDateStr();
     var finalized = false;
 
-            function processEntries(entries) {
+function processEntries(entries) {
       var added = 0;
       for (var i = 0; i < entries.length; i++) {
         var e = entries[i];
         if (!e.data || !e.category_desc) continue;
-        
         var rid = String(e.rid || '');
         var title = (e.category_desc || '').replace(/\s+/g, ' ').trim();
         var state = classifyTitle(title);
         var ts = parseAlertDate(e.alertDate);
         if (!ts) continue;
         
-        // 🚨 THE FIX: Split grouped cities (e.g. "תל אביב, הרצליה") into separate alerts!
+        // 🚨 THE SPLITTER: Handles multiple cities in one alert
         var locations = Array.isArray(e.data) ? e.data : String(e.data).split(',').map(function(s) { return s.trim(); });
         
         for (var j = 0; j < locations.length; j++) {
             var location = normalizeGeresh(locations[j]);
             if (!location) continue;
-            
             var ridKey = rid ? (location + '|' + rid) : '';
             var compositeKey = location + '|' + (e.alertDate || '').replace('T', ' ');
-            
             if (ridKey && extendedRids.has(ridKey)) continue;
             if (extendedRids.has(compositeKey)) continue;
-            
             if (ridKey) extendedRids.add(ridKey);
             extendedRids.add(compositeKey);
-            
             extendedHistory.push({ location: location, title: title, alertDate: ts, state: state });
             recordHistory(location, title, e.alertDate || '', state);
             added++;
@@ -3706,7 +3697,6 @@ function fetchHistory(onDone) {
       }
       return added;
     }
-
 
 
     function finalize() {
