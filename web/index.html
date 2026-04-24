@@ -3610,18 +3610,6 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
         if (typeof rebuildTimeline === 'function') {
           rebuildTimeline('none'); 
         }
-
-        // 3. Update the Daily Alerts Counter (using the correct 'entries' variable!)
-        var dailyCounterEl = document.getElementById('statusAlertsToday');
-        if (dailyCounterEl && entries) {
-          if (entries.length > 0) {
-            dailyCounterEl.textContent = entries.length + ' אזעקות היום';
-            dailyCounterEl.style.display = 'block';
-          } else {
-            dailyCounterEl.style.display = 'none';
-          }
-        }
-        
         // Finish connecting!
         if (onDone) onDone();
       })
@@ -3665,28 +3653,36 @@ var alertArray = Array.isArray(parsedData) ? parsedData : [parsedData];
     var dateParam = timelineDate || todayDateStr();
     var finalized = false;
 
-    function processEntries(entries) {
+        function processEntries(entries) {
       var added = 0;
       for (var i = 0; i < entries.length; i++) {
         var e = entries[i];
         if (!e.data || !e.category_desc) continue;
+        
         var rid = String(e.rid || '');
         var title = (e.category_desc || '').replace(/\s+/g, ' ').trim();
         var state = classifyTitle(title);
         var location = normalizeGeresh((typeof e.data === 'string' ? e.data : String(e.data)).trim());
         var ts = parseAlertDate(e.alertDate);
         if (!ts) continue;
+        
+        // 🚨 THE FIX: Make the deduplication keys location-specific!
+        var ridKey = rid ? (location + '|' + rid) : '';
         var compositeKey = location + '|' + (e.alertDate || '').replace('T', ' ');
-        if (rid && extendedRids.has(rid)) continue;
+        
+        if (ridKey && extendedRids.has(ridKey)) continue;
         if (extendedRids.has(compositeKey)) continue;
-        if (rid) extendedRids.add(rid);
+        
+        if (ridKey) extendedRids.add(ridKey);
         extendedRids.add(compositeKey);
+        
         extendedHistory.push({ location: location, title: title, alertDate: ts, state: state });
         recordHistory(location, title, e.alertDate || '', state);
         added++;
       }
       return added;
     }
+
 
     function finalize() {
       if (finalized) return; // already handled (404 or non-array)
