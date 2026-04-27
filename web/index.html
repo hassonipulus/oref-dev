@@ -113,15 +113,15 @@ body.dark #status {
   line-height: 1.1;
   white-space: nowrap;
 }
-
 .status-main-row {
   display: flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 10px; /* Dropped from 11px */
+  align-items: center;       /* Vertically aligns the dot with the text */
+  justify-content: center;   /* 🚨 SNAPS THE WHOLE ROW TO THE CENTER */
+  gap: 5px;                  /* Clean spacing between dot and text */
+  font-size: 10px; 
   font-weight: 600;
 }
-
+    
 #statusStats {
   display: flex;
   flex-direction: column; 
