@@ -74,23 +74,68 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
 .dot-green  { background: #00cc00; }
 
 #status {
+#status {
   position: fixed;
   top: 10px;
   left: 10px;
   background: rgba(255, 255, 255, 0.92);
   border-radius: 4px;
-  padding: 4px 8px; /* Extra tight padding */
+  padding: 3px 6px; /* Ultra-tight padding */
   box-shadow: 0 1px 4px rgba(0,0,0,0.15);
   z-index: 1000;
   direction: rtl;
-  max-width: 160px; /* Forces a compact width */
+  max-width: 120px; /* Shaved off 40px of width! */
 }
-    
+
 /* 🌙 Dark Mode Match */
 body.dark #status {
   background: rgba(48, 50, 56, 0.92);
   color: #ddd;
   border: 1px solid #555;
+}
+
+/* Shrink the glowing connection dot */
+#status .indicator {
+  display: inline-block; 
+  width: 6px; 
+  height: 6px; 
+  border-radius: 50%;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* The Disclaimer Line */
+#disclaimer-line {
+  font-size: 7.5px; /* Barely there, but readable */
+  color: #888;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  margin-bottom: 2px;
+  padding-bottom: 2px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.status-main-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px; /* Dropped from 11px */
+  font-weight: 600;
+}
+
+#statusStats {
+  display: flex;
+  flex-direction: column; 
+  gap: 0px; /* Removes dead space between stacked text */
+  font-size: 8px; /* Dropped from 9px */
+  margin-top: 2px;
+  color: #666;
+  line-height: 1.2;
+}
+
+/* 🚨 Auto-hide logic for history mode */
+body.history-mode-active #disclaimer-line {
+  display: none !important;
 }
     
 #status .indicator {
@@ -147,47 +192,25 @@ body.dark #status {
   z-index: 1001;
   direction: ltr;
   color: #333;
-}
-    
-/* The Disclaimer Line */
-#disclaimer-line {
-  font-size: 8.5px;
-  color: #888;
-  border-bottom: 1px solid rgba(0,0,0,0.06);
-  margin-bottom: 3px;
-  padding-bottom: 1px;
-}
-
-.status-main-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-#statusStats {
-  display: flex;
-  flex-direction: column; /* Stacked for width efficiency */
-  gap: 1px;
-  font-size: 9px;
-  margin-top: 3px;
-  color: #666;
-}
-
-/* 🚨 Auto-hide logic for history mode */
-body.history-mode-active #disclaimer-line {
-  display: none !important;
-}
+}   
 
 /* 📱 Mobile optimization */
 @media (max-width: 600px) {
   #status {
-    top: 8px;
-    left: 8px;
-    padding: 3px 6px;
+    top: 6px;
+    left: 6px;
+    padding: 2px 5px !important;
+    max-width: 110px !important; 
+  }
+  #statusText {
+    font-size: 9px !important; 
+  }
+  #statusStats {
+    font-size: 7.5px !important; 
+    margin-top: 1px !important; 
   }
 }
+
     
 /* --- Unified panel (sidebar + timeline) --- */
 #unified-panel {
@@ -1136,7 +1159,7 @@ try {
     
 <div id="status">
   <div id="disclaimer-line">
-    ⚠️ נא להסמך על האמצעים הרשמיים - המפה לאינדיקציה בלבד
+    ⚠️ נא להסמך על אמצעי ההתרעה הרשמיים בלבד
   </div>
 
   <div class="status-main-row">
