@@ -73,7 +73,7 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
 .dot-yellow { background: #ffcc00; }
 .dot-green  { background: #00cc00; }
 
-##status {
+#status {
   position: fixed;
   top: 10px;
   left: 10px;
@@ -149,7 +149,7 @@ body.dark #status {
   color: #333;
 }
     
-//* The Disclaimer Line */
+/* The Disclaimer Line */
 #disclaimer-line {
   font-size: 8.5px;
   color: #888;
@@ -1135,8 +1135,8 @@ try {
 </div>
     
 <div id="status">
-  <div style="font-size: 9px; color: #888; margin-bottom: 4px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 2px;">
-    ⚠️ נא להסמך על האמצעים הרשמיים - המפה נועדה לאינדקציה בלבד
+  <div id="disclaimer-line">
+    ⚠️ נא להסמך על האמצעים הרשמיים - המפה לאינדיקציה בלבד
   </div>
 
   <div class="status-main-row">
@@ -1149,7 +1149,6 @@ try {
     <span id="statusAlertsToday" style="display:none; color:#ef4444; font-weight:bold;"></span>
   </div>
 </div>
-
     
 <div id="errorDetail"></div>
     <div id="about-visitors-stat">
