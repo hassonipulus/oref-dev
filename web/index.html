@@ -142,49 +142,53 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
   color: #333;
 }
 
-
-/* 📝 Official Disclaimer Style */
 #official-disclaimer {
   position: fixed;
-  top: 14px;
+  top: 8px; /* Nudged up closer to the edge */
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
-  padding: 6px 14px;
-  background: rgba(255, 255, 255, 0.92); /* Match status box opacity */
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  
+  /* 📏 Slimmer dimensions */
+  padding: 3px 10px; 
+  font-size: 11px;
+  line-height: 1;
+  border-radius: 4px; /* Matches your status box corner style */
+  
+  background: rgba(255, 255, 255, 0.9);
+  color: #444;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1px solid rgba(0,0,0,0.05);
+  
   direction: rtl;
   white-space: nowrap;
-  color: #333;
+  pointer-events: none;
   transition: opacity 0.3s ease, transform 0.3s ease;
-  pointer-events: none; /* Keeps it from blocking map clicks */
 }
 
-/* 🌙 Dark Mode Match */
+/* 🌙 Dark Mode Polish */
 body.dark #official-disclaimer {
-  background: rgba(48, 50, 56, 0.92);
-  color: #ddd;
-  border: 1px solid #555;
+  background: rgba(40, 42, 48, 0.95);
+  color: #bbb;
+  border: 1px solid #444;
 }
 
-.disclaimer-icon { margin-left: 6px; }
-
-/* 📱 Mobile: Shrink to stay out of the way */
+/* 📱 Mobile: Even smaller to prevent overlap */
 @media (max-width: 600px) {
   #official-disclaimer {
-    font-size: 11px;
-    top: 10px;
-    padding: 4px 10px;
+    font-size: 10px;
+    top: 6px;
+    padding: 2px 8px;
+    max-width: 80vw; /* Prevents it from hitting the edges */
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
-/* 🚨 Auto-hide logic for history mode */
+/* 🚨 Auto-hide logic */
 body.history-mode-active #official-disclaimer {
   opacity: 0;
-  transform: translateX(-50%) translateY(-20px);
+  transform: translateX(-50%) translateY(-15px);
 }
 
 /* --- Unified panel (sidebar + timeline) --- */
