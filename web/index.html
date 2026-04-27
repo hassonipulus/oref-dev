@@ -125,8 +125,10 @@ body.dark #status {
 #statusStats {
   display: flex;
   flex-direction: column; 
-  gap: 0px; /* Removes dead space between stacked text */
-  font-size: 8px; /* Dropped from 9px */
+  align-items: center; /* 🚨 THIS SNAPS THEM TO THE CENTER */
+  text-align: center;  /* Failsafe for the text itself */
+  gap: 0px; 
+  font-size: 8px; 
   margin-top: 2px;
   color: #666;
   line-height: 1.2;
