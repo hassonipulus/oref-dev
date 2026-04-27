@@ -973,7 +973,12 @@ body.dark #menu-visitors-count { color: #6ba6ff; }
 body.dark .menu-visitors-sub { color: #999; }
 body.dark #historyTimeLabel { color: #999 !important; border-top-color: #4a4c50 !important; }
 body.dark #errorDetail { background: #30323a; color: #ddd; border-color: #c00; }
-body.dark #legend { background: rgba(48,50,56,0.92); color: #ddd; }
+body.dark #legend { 
+  background: rgba(48, 50, 56, 0.75); 
+  backdrop-filter: blur(8px); 
+  -webkit-backdrop-filter: blur(8px); 
+  color: #ddd; 
+}
 /* Unified panel (location + timeline) */
 body.dark #unified-panel { background: #2e3038; }
 body.dark #up-location-name { color: #eee; }
