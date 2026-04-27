@@ -26,7 +26,12 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
 .maplibregl-ctrl-attrib {
     display: none !important;
 }
-  
+    
+/* 🚨 Push MapLibre zoom controls down to clear the custom status box */
+.maplibregl-ctrl-top-left {
+  margin-top: 75px !important;
+}
+
 #site-logo {
   position: fixed;
   top: 0;
