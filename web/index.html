@@ -27,10 +27,27 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
     display: none !important;
 }
     
-/* 🚨 Push MapLibre zoom controls down to clear the custom status box */
+/* 🚨 Force the zoom controls down below the custom status box */
 .maplibregl-ctrl-top-left {
-  margin-top: 75px !important;
+  position: absolute !important;
+  top: 85px !important; /* Pushes it down safely */
+  left: 10px !important;
+  margin: 0 !important;
 }
+
+/* 🎨 Make the PC buttons match your UI's translucent style */
+.maplibregl-ctrl-group { 
+  background: rgba(255, 255, 255, 0.92) !important; 
+  border-radius: 6px !important; 
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15) !important; 
+  border: none !important; 
+}
+
+/* Soften the icon colors so they aren't stark black */
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  opacity: 0.7; 
+}
+
 #site-logo {
   position: fixed;
   top: 0;
@@ -214,10 +231,15 @@ body.history-mode-active #disclaimer-line {
     font-size: 7.5px !important; 
     margin-top: 1px !important; 
   }
-  /* 🚨 Push zoom controls down on mobile to clear the status box */
+  
+    /* 🚨 Push zoom controls down on mobile */
   .maplibregl-ctrl-top-left {
-    margin-top: 65px !important; 
+    position: absolute !important;
+    top: 75px !important; /* Snug fit under the mobile status box */
+    left: 6px !important;
+    margin: 0 !important;
   }
+
     
 /* --- Unified panel (sidebar + timeline) --- */
 #unified-panel {
