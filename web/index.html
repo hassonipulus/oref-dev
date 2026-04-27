@@ -31,7 +31,6 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
 .maplibregl-ctrl-top-left {
   margin-top: 75px !important;
 }
-
 #site-logo {
   position: fixed;
   top: 0;
@@ -215,8 +214,10 @@ body.history-mode-active #disclaimer-line {
     font-size: 7.5px !important; 
     margin-top: 1px !important; 
   }
-}
-
+  /* 🚨 Push zoom controls down on mobile to clear the status box */
+  .maplibregl-ctrl-top-left {
+    margin-top: 65px !important; 
+  }
     
 /* --- Unified panel (sidebar + timeline) --- */
 #unified-panel {
