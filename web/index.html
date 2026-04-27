@@ -77,7 +77,11 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
 }
 #right-panel > * { pointer-events: auto; }
 #legend {
-  background: rgba(255,255,255,0.92);
+  /* 🎨 Lower opacity + Blur for that premium glass look */
+  background: rgba(255, 255, 255, 0.75); 
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  
   border-radius: 8px;
   padding: 12px 16px;
   font-size: 14px;
