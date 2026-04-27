@@ -141,56 +141,18 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
   direction: ltr;
   color: #333;
 }
-
-#official-disclaimer {
-  position: fixed;
-  top: 8px; /* Nudged up closer to the edge */
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-  
-  /* 📏 Slimmer dimensions */
-  padding: 3px 10px; 
-  font-size: 11px;
-  line-height: 1;
-  border-radius: 4px; /* Matches your status box corner style */
-  
-  background: rgba(255, 255, 255, 0.9);
-  color: #444;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  border: 1px solid rgba(0,0,0,0.05);
-  
-  direction: rtl;
-  white-space: nowrap;
-  pointer-events: none;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+    
+/* 🌙 Dark Mode adjustment for the mini-text */
+body.dark #status div:first-child {
+  color: #999 !important;
+  border-color: rgba(255,255,255,0.1) !important;
 }
 
-/* 🌙 Dark Mode Polish */
-body.dark #official-disclaimer {
-  background: rgba(40, 42, 48, 0.95);
-  color: #bbb;
-  border: 1px solid #444;
+/* 🚨 Hide the disclaimer line only during history mode */
+body.history-mode-active #status div:first-child {
+  display: none !important;
 }
-
-/* 📱 Mobile: Even smaller to prevent overlap */
-@media (max-width: 600px) {
-  #official-disclaimer {
-    font-size: 10px;
-    top: 6px;
-    padding: 2px 8px;
-    max-width: 80vw; /* Prevents it from hitting the edges */
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-}
-
-/* 🚨 Auto-hide logic */
-body.history-mode-active #official-disclaimer {
-  opacity: 0;
-  transform: translateX(-50%) translateY(-15px);
-}
-
+    
 /* --- Unified panel (sidebar + timeline) --- */
 #unified-panel {
   display: none;
@@ -1009,10 +971,6 @@ try {
 </div>
 
 <div id="map"></div>
-<div id="official-disclaimer">
-  <span class="disclaimer-icon">⚠️</span>
-  <span>נא להסצמך על האמצעים הרשמיים - המפה נועדה לאינדקציה בלבד</span>
-</div>
 <button id="menu-btn" type="button" title="תפריט" aria-label="תפריט" aria-expanded="false">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
 </button>
@@ -1137,16 +1095,22 @@ try {
   </div>
 </div>
 
+
+  
+  <div id="historyTimeLabel" style="display:none; font-size:11px; color:#555; margin-top:5px; padding-top:5px; border-top:1px solid #ddd;"></div>
+</div>
 <div id="status">
+  <div style="font-size: 9px; color: #888; margin-bottom: 4px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 2px;">
+    ⚠️ נא להסמך על האמצעים הרשמיים - המפה נועדה לאינדקציה בלבד
+  </div>
+
   <span class="indicator indicator-err" id="statusDot"></span>
   <span id="statusText">מתחבר...</span>
   
-  <div id="statusStats" style="display:flex; justify-content:space-between; gap:12px; font-size:11px; margin-top:6px; padding-top:5px; border-top:1px solid rgba(0,0,0,0.08); direction:rtl;">
+  <div id="statusStats">
     <span id="statusVisitors" style="display:none; color:#555;"></span>
     <span id="statusAlertsToday" style="display:none; color:#ef4444; font-weight:bold;"></span>
   </div>
-  
-  <div id="historyTimeLabel" style="display:none; font-size:11px; color:#555; margin-top:5px; padding-top:5px; border-top:1px solid #ddd;"></div>
 </div>
 
     
