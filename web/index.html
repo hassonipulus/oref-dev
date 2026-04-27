@@ -448,6 +448,22 @@ body.f-predict #menu-predict.f-gated { display: block !important; }
 @media (hover: hover) {
   .menu-item-row:hover { background: #f5f5f5; }
 }
+body.f-ellipse #ellipse-stub
+.menu-item { border-bottom: 1px solid #f0f0f0; }
+.menu-item:last-child { border-bottom: none; }
+.menu-item-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+  width: 100%;
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+}
 .menu-check {
   margin-right: auto;
   width: 16px;
