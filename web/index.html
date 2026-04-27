@@ -143,6 +143,49 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
 }
 
 
+/* 📝 Official Disclaimer Style */
+#official-disclaimer {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.92); /* Match status box opacity */
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  direction: rtl;
+  white-space: nowrap;
+  color: #333;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none; /* Keeps it from blocking map clicks */
+}
+
+/* 🌙 Dark Mode Match */
+body.dark #official-disclaimer {
+  background: rgba(48, 50, 56, 0.92);
+  color: #ddd;
+  border: 1px solid #555;
+}
+
+.disclaimer-icon { margin-left: 6px; }
+
+/* 📱 Mobile: Shrink to stay out of the way */
+@media (max-width: 600px) {
+  #official-disclaimer {
+    font-size: 11px;
+    top: 10px;
+    padding: 4px 10px;
+  }
+}
+
+/* 🚨 Auto-hide logic for history mode */
+body.history-mode-active #official-disclaimer {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-20px);
+}
 
 /* --- Unified panel (sidebar + timeline) --- */
 #unified-panel {
@@ -962,7 +1005,10 @@ try {
 </div>
 
 <div id="map"></div>
-
+<div id="official-disclaimer">
+  <span class="disclaimer-icon">⚠️</span>
+  <span>נא להסצמך על האמצעים הרשמיים - המפה נועדה לאינדקציה בלבד</span>
+</div>
 <button id="menu-btn" type="button" title="תפריט" aria-label="תפריט" aria-expanded="false">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
 </button>
@@ -4352,6 +4398,7 @@ function updateDateNav() {
 
     // --- Mode switching ---
     function enterLiveMode() {
+    document.body.classList.remove('history-mode-active'); // 🚨 Shows disclaimer
       if (isLiveMode) return;
       isLiveMode = true;
       currentViewTime = 0;
@@ -4361,26 +4408,33 @@ function updateDateNav() {
     }
 
     function enterHistoryMode(time) {
-      if (isLiveMode) {
-        saveLiveState();
-        isLiveMode = false;
-        // Revert status text to generic label (resident count is live-only)
-        var zl = document.getElementById('zoomAlertsLink');
-        if (zl) zl.innerHTML = '\u05D4\u05EA\u05E8\u05E2\u05D5\u05EA \u05E4\u05E2\u05D9\u05DC\u05D5\u05EA';
-      }
-      currentViewTime = time;
-      var timeStr = formatTime(time);
-      label.textContent = timeStr;
-      label.style.opacity = '';
-      var datePart = isViewingToday() ? '' : ' (' + formatDateLabel(timelineDate) + ')';
-      document.getElementById('historyTimeLabel').style.display = 'block';
-      document.getElementById('historyTimeLabel').textContent = '\u05DE\u05E8\u05D0\u05D4 \u05D4\u05EA\u05E8\u05E2\u05D5\u05EA \u05DE\u05E9\u05E2\u05D4 ' + timeStr + datePart;
-      reconstructStateAt(time);
-      // Sync event list scroll
-      if (selectedLocation && !_scrollSyncLock) {
-        syncScrollToTime(time);
-      }
-    }
+  document.body.classList.add('history-mode-active'); // 🚨 Hides disclaimer
+  
+  if (isLiveMode) {
+    saveLiveState();
+    isLiveMode = false;
+    // Revert status text to generic label (resident count is live-only)
+    var zl = document.getElementById('zoomAlertsLink');
+    if (zl) zl.innerHTML = '\u05D4\u05EA\u05E8\u05E2\u05D5\u05EA \u05E4\u05E2\u05D9\u05DC\u05D5\u05EA';
+  }
+  
+  currentViewTime = time;
+  var timeStr = formatTime(time);
+  label.textContent = timeStr;
+  label.style.opacity = '';
+  
+  var datePart = isViewingToday() ? '' : ' (' + formatDateLabel(timelineDate) + ')';
+  document.getElementById('historyTimeLabel').style.display = 'block';
+  document.getElementById('historyTimeLabel').textContent = '\u05DE\u05E8\u05D0\u05D4 \u05D4\u05EA\u05E8\u05E2\u05D5\u05EA \u05DE\u05E9\u05E2\u05D4 ' + timeStr + datePart;
+  
+  reconstructStateAt(time);
+  
+  // Sync event list scroll
+  if (selectedLocation && !_scrollSyncLock) {
+    syncScrollToTime(time);
+  }
+}
+
 
     function seekTo(time) {
       time = clampTime(time);
@@ -5015,7 +5069,7 @@ function updateDateNav() {
   }
   _acquireWakeLock();
 
- /* // --- Pause polling when tab is hidden; resume when visible ---
+ // --- Pause polling when tab is hidden; resume when visible ---
   document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'hidden') {
       pausePolling();
@@ -5039,7 +5093,7 @@ function updateDateNav() {
     } catch(e) {}
     resumePolling();
   });
-*/
+  
   // --- Pause polling when tab is hidden; resume when visible ---
     
   document.addEventListener('visibilitychange', function() {
