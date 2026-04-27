@@ -73,19 +73,26 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
 .dot-yellow { background: #ffcc00; }
 .dot-green  { background: #00cc00; }
 
-
-#status {
+##status {
   position: fixed;
-  top: 101px;
+  top: 10px;
   left: 10px;
-  background: rgba(255,255,255,0.92);
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 13px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 4px;
+  padding: 4px 8px; /* Extra tight padding */
   box-shadow: 0 1px 4px rgba(0,0,0,0.15);
   z-index: 1000;
   direction: rtl;
+  max-width: 160px; /* Forces a compact width */
 }
+    
+/* 🌙 Dark Mode Match */
+body.dark #status {
+  background: rgba(48, 50, 56, 0.92);
+  color: #ddd;
+  border: 1px solid #555;
+}
+    
 #status .indicator {
   display: inline-block; width: 8px; height: 8px; border-radius: 50%;
   margin-left: 6px; vertical-align: middle;
@@ -142,15 +149,44 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
   color: #333;
 }
     
-/* 🌙 Dark Mode adjustment for the mini-text */
-body.dark #status div:first-child {
-  color: #999 !important;
-  border-color: rgba(255,255,255,0.1) !important;
+//* The Disclaimer Line */
+#disclaimer-line {
+  font-size: 8.5px;
+  color: #888;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  margin-bottom: 3px;
+  padding-bottom: 1px;
 }
 
-/* 🚨 Hide the disclaimer line only during history mode */
-body.history-mode-active #status div:first-child {
+.status-main-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+#statusStats {
+  display: flex;
+  flex-direction: column; /* Stacked for width efficiency */
+  gap: 1px;
+  font-size: 9px;
+  margin-top: 3px;
+  color: #666;
+}
+
+/* 🚨 Auto-hide logic for history mode */
+body.history-mode-active #disclaimer-line {
   display: none !important;
+}
+
+/* 📱 Mobile optimization */
+@media (max-width: 600px) {
+  #status {
+    top: 8px;
+    left: 8px;
+    padding: 3px 6px;
+  }
 }
     
 /* --- Unified panel (sidebar + timeline) --- */
