@@ -37,11 +37,14 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
 
 /* 🎨 Make the PC buttons match your UI's translucent style */
 .maplibregl-ctrl-group { 
-  background: rgba(255, 255, 255, 0.92) !important; 
+  background: rgba(255, 255, 255, 0.75) !important; /* Slightly more transparent */
+  backdrop-filter: blur(8px); /* Adds a glass effect */
+  -webkit-backdrop-filter: blur(8px);
   border-radius: 6px !important; 
   box-shadow: 0 1px 4px rgba(0,0,0,0.15) !important; 
   border: none !important; 
 }
+
 
 /* Soften the icon colors so they aren't stark black */
 .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
@@ -545,7 +548,6 @@ body.f-predict #menu-predict.f-gated { display: block !important; }
 @media (hover: hover) {
   .menu-item-row:hover { background: #f5f5f5; }
 }
-body.f-ellipse #ellipse-stub
 body.f-ellipse #ellipse-stub { display: block !important; }
 .menu-item { border-bottom: 1px solid #f0f0f0; }
 
@@ -891,12 +893,7 @@ body.f-ellipse #ellipse-stub { display: block !important; }
   }
   #legend.collapsed .row { display: none; }
   #legend.collapsed #legend-icon { display: block; }
-  #status {
-    top: 110px;
-    left: 10px;
-    padding: 5px 10px;
-    font-size: 13px;
-  }
+  
   #errorDetail {
     top: 140px;
     left: 8px;
