@@ -30,10 +30,23 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
 /* 🚨 Force the zoom controls down below the custom status box */
 .maplibregl-ctrl-top-left {
   position: absolute !important;
-  top: 85px !important; /* Pushes it down safely */
+  top: 85px !important; 
   left: 10px !important;
   margin: 0 !important;
 }
+
+/* 🎨 Original solid translucent style for PC buttons */
+.maplibregl-ctrl-group { 
+  background: rgba(255, 255, 255, 0.92) !important; 
+  border-radius: 6px !important; 
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15) !important; 
+  border: none !important; 
+}
+
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  opacity: 0.7; 
+}
+
 
 /* 🎨 Make the PC buttons match your UI's translucent style */
 .maplibregl-ctrl-group { 
@@ -77,11 +90,7 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
 }
 #right-panel > * { pointer-events: auto; }
 #legend {
-  /* 🎨 Lower opacity + Blur for that premium glass look */
-  background: rgba(255, 255, 255, 0.75); 
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  
+  background: rgba(255,255,255,0.92);
   border-radius: 8px;
   padding: 12px 16px;
   font-size: 14px;
@@ -977,12 +986,7 @@ body.dark #menu-visitors-count { color: #6ba6ff; }
 body.dark .menu-visitors-sub { color: #999; }
 body.dark #historyTimeLabel { color: #999 !important; border-top-color: #4a4c50 !important; }
 body.dark #errorDetail { background: #30323a; color: #ddd; border-color: #c00; }
-body.dark #legend { 
-  background: rgba(48, 50, 56, 0.75); 
-  backdrop-filter: blur(8px); 
-  -webkit-backdrop-filter: blur(8px); 
-  color: #ddd; 
-}
+body.dark #legend { background: rgba(48,50,56,0.92); color: #ddd; }
 /* Unified panel (location + timeline) */
 body.dark #unified-panel { background: #2e3038; }
 body.dark #up-location-name { color: #eee; }
