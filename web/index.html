@@ -3626,19 +3626,19 @@ function fadeGreenMarkers() {
         ? residentTotal.toLocaleString('he-IL') + ' \u05D1\u05DE\u05E7\u05DC\u05D8\u05D9\u05DD'
         : 'התרעות פעילות';
       setStatusHTML(dominant, '<a href="#" id="zoomAlertsLink">' + statusLabel + '</a>');
-    } else {
+        } else {
       var rel = formatRelativeTime(lastDangerTime);
       if (rel) {
         var lastLine = (dayHistoryReady && extendedHistory.length > 0)
           ? '<a href="#" id="lastAlertLink" style="color: inherit; text-decoration: underline dotted;">התרעה אחרונה ' + rel + '</a>'
           : 'התרעה אחרונה ' + rel;
-        // 🚨 THE FIX: Puts everything on one line with the default brighter text color
-        setStatusHTML('green', 'אין כרגע התרעות • ' + lastLine);
+        
+        // 🚨 Forced onto one sleek line with a refined 9px font size
+        setStatusHTML('green', '<span style="font-size: 9px; font-weight: 500; white-space: nowrap;">אין התרעות • ' + lastLine + '</span>');
       } else {
-        setStatus('green', 'אין התרעות פעילות');
+        setStatusHTML('green', '<span style="font-size: 9px; font-weight: 500;">אין התרעות פעילות</span>');
       }
     }
-
     // 🚨 NEW: The Daily Alerts Counter Logic (Safely inside the function now!)
     var alertCountEl = document.getElementById('statusAlertsToday');
     if (alertCountEl) {
