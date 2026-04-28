@@ -1730,9 +1730,6 @@ function apiFetch(endpoint) {
   // --- Map setup ---
   var DEFAULT_CENTER = [32.2, 34.9], DEFAULT_ZOOM = 7.2;
 
-  var pmtilesProtocol = new pmtiles.Protocol();
-  maplibregl.addProtocol('pmtiles', pmtilesProtocol.tile);
-
   maplibregl.setRTLTextPlugin(
     'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js',
     null, true
