@@ -166,11 +166,11 @@ body.dark #status {
 #statusStats {
   display: flex;
   flex-direction: column; 
-  align-items: center; /* 🚨 THIS SNAPS THEM TO THE CENTER */
-  text-align: center;  /* Failsafe for the text itself */
+  align-items: center; 
+  text-align: center;  
   gap: 0px; 
   font-size: 8px; 
-  margin-top: 2px;
+  margin-top: 6px; /* 🚨 BUMPED UP FROM 2px: Pushes the stats down */
   color: #666;
   line-height: 1.2;
 }
@@ -247,13 +247,11 @@ body.history-mode-active #disclaimer-line {
     max-width: 90vw !important;    /* Failsafe so it never goes off the phone screen */
   }
 
-  #statusText {
-    font-size: 9px !important; 
-  }
   #statusStats {
     font-size: 7.5px !important; 
-    margin-top: 1px !important; 
+    margin-top: 4px !important; /* 🚨 BUMPED UP FROM 1px */
   }
+
   
   /* 🚨 Push zoom controls down on mobile */
   .maplibregl-ctrl-top-left {
