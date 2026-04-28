@@ -116,11 +116,12 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
   left: 10px;
   background: rgba(255, 255, 255, 0.92);
   border-radius: 4px;
-  padding: 4px 6px; 
+  padding: 3px 6px; 
   box-shadow: 0 1px 4px rgba(0,0,0,0.15);
   z-index: 1000;
   direction: rtl;
-  max-width: 140px; /* 🚨 Widened slightly to fit your specific text */
+  width: max-content; /* 🚨 Lets the box hug the text perfectly */
+  max-width: 250px;   /* Safety ceiling */
 }
 
 /* 🌙 Dark Mode Match */
@@ -237,12 +238,15 @@ body.history-mode-active #disclaimer-line {
 
 /* 📱 Mobile optimization */
 @media (max-width: 600px) {
-  #status {
+    
+    #status {
     top: 6px;
     left: 6px;
     padding: 2px 5px !important;
-    max-width: 110px !important; 
+    width: max-content !important; /* 🚨 Allows it to stretch on mobile too */
+    max-width: 90vw !important;    /* Failsafe so it never goes off the phone screen */
   }
+
   #statusText {
     font-size: 9px !important; 
   }
