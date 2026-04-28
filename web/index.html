@@ -116,12 +116,12 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
   left: 10px;
   background: rgba(255, 255, 255, 0.92);
   border-radius: 4px;
-  padding: 3px 6px; 
+  padding: 4px 8px; /* Slightly more padding so it doesn't hug the text too tight */
   box-shadow: 0 1px 4px rgba(0,0,0,0.15);
   z-index: 1000;
   direction: rtl;
-  width: max-content; /* 🚨 Lets the box hug the text perfectly */
-  max-width: 250px;   /* Safety ceiling */
+  width: max-content; 
+  max-width: 300px; /* 🚨 Raised from 140px to give it plenty of stretching room */
 }
 
 /* 🌙 Dark Mode Match */
@@ -849,6 +849,16 @@ body.f-ellipse #ellipse-stub { display: block !important; }
   padding: 0 2px;
 }
 @media (max-width: 600px) {
+    
+  #status {
+    top: 6px;
+    left: 6px;
+    padding: 3px 6px !important;
+    width: max-content !important; 
+    max-width: 85vw !important; /* 🚨 Allows it to stretch up to 85% of the phone screen */
+  }
+
+    
   #right-panel {
     right: 12px;
     bottom: 24px;
