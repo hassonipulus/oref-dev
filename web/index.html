@@ -5,7 +5,6 @@
 <link rel="icon" href="/icon-192.png" sizes="192x192">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1a1a2e">
-<link rel="manifest" href="/manifest.json">
 <title>התרעות פיקוד העורף בזמן אמת</title>
 
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css">
@@ -13,21 +12,18 @@
 <script src="https://unpkg.com/pmtiles@3/dist/pmtiles.js"></script>
 <script src="https://unpkg.com/@protomaps/basemaps@5.7.2/dist/basemaps.js"></script>
 <style>
+/* =========================================
+   1. BASE RESETS & MAPLIBRE OVERRIDES
+========================================= */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; font-family: Arial, sans-serif; }
-#map { width: 100%; height: 100%; direction: ltr; background: #aad3df; }
+#map { width: 100%; height: 100%; position: absolute; top: 0; left: 0; direction: ltr; background: #aad3df; }
 .maplibregl-canvas:focus { outline: none; }
-.maplibregl-ctrl-zoom { border-radius: 6px !important; box-shadow: 0 1px 4px rgba(0,0,0,0.15) !important; border: none !important; }
-.maplibregl-ctrl-group { border-radius: 6px !important; box-shadow: 0 1px 4px rgba(0,0,0,0.15) !important; border: none !important; }
-.maplibregl-ctrl-group button { border: none !important; }
-.maplibregl-ctrl-group button:first-child { border-radius: 6px 6px 0 0 !important; }
-.maplibregl-ctrl-group button:last-child { border-radius: 0 0 6px 6px !important; }
+.maplibregl-ctrl-attrib { display: none !important; }
+
 body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-events: none !important; }
-.maplibregl-ctrl-attrib {
-    display: none !important;
-}
-    
-/* 🚨 Force the zoom controls down below the custom status box */
+
+/* Force the zoom controls down below the custom status box */
 .maplibregl-ctrl-top-left {
   position: absolute !important;
   top: 85px !important; 
@@ -35,47 +31,95 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
   margin: 0 !important;
 }
 
-/* 🎨 Original solid translucent style for PC buttons */
+/* Make the PC buttons match your UI's translucent style */
 .maplibregl-ctrl-group { 
-  background: rgba(255, 255, 255, 0.92) !important; 
-  border-radius: 6px !important; 
-  box-shadow: 0 1px 4px rgba(0,0,0,0.15) !important; 
-  border: none !important; 
-}
-
-.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
-  opacity: 0.7; 
-}
-
-
-/* 🎨 Make the PC buttons match your UI's translucent style */
-.maplibregl-ctrl-group { 
-  background: rgba(255, 255, 255, 0.75) !important; /* Slightly more transparent */
-  backdrop-filter: blur(8px); /* Adds a glass effect */
+  background: rgba(255, 255, 255, 0.75) !important; 
+  backdrop-filter: blur(8px); 
   -webkit-backdrop-filter: blur(8px);
   border-radius: 6px !important; 
   box-shadow: 0 1px 4px rgba(0,0,0,0.15) !important; 
   border: none !important; 
 }
+.maplibregl-ctrl-group button { border: none !important; }
+.maplibregl-ctrl-group button:first-child { border-radius: 6px 6px 0 0 !important; }
+.maplibregl-ctrl-group button:last-child { border-radius: 0 0 6px 6px !important; }
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon { opacity: 0.7; }
 
 
-/* Soften the icon colors so they aren't stark black */
-.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
-  opacity: 0.7; 
-}
-
-#site-logo {
-  position: fixed;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-  pointer-events: none;
-}
+/* =========================================
+   2. GLOBAL UI COMPONENTS & ANIMATIONS
+========================================= */
 @keyframes tapHintFade { 0%,70% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes toastFade { 0%,75% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
 .blue-dot { display: inline-block; width: 12px; height: 12px; background: #4285F4; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 4px rgba(66,133,244,0.5); }
 
+#site-logo { position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 1000; pointer-events: none; }
+
+
+/* =========================================
+   3. STATUS BOX (TOP LEFT)
+========================================= */
+#status {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 4px;
+  padding: 4px 8px; 
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  z-index: 1000;
+  direction: rtl;
+  width: max-content; 
+  max-width: 300px; 
+}
+#disclaimer-line {
+  font-size: 11px; 
+  color: #d9d9d9;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  margin-bottom: 2px;
+  padding-bottom: 2px;
+  line-height: 1.3;
+  white-space: normal; 
+  text-align: center;  
+}
+body.history-mode-active #disclaimer-line { display: none !important; }
+
+.status-main-row {
+  display: flex;
+  align-items: center;       
+  justify-content: center;   
+  gap: 5px;                  
+  font-size: 12px; 
+  font-weight: 600;
+}
+#statusStats {
+  display: flex;
+  flex-direction: column; 
+  align-items: center; 
+  text-align: center;  
+  gap: 0px; 
+  font-size: 11px; 
+  margin-top: 7px; 
+  color: #666;
+  line-height: 1.2;
+}
+#status .indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-left: 2.5px; vertical-align: middle; }
+.indicator-red    { background: #ff0000; animation: pulse 3s ease-in-out infinite; }
+.indicator-purple { background: #9922cc; animation: pulse 3s ease-in-out infinite; }
+.indicator-yellow { background: #ffcc00; animation: pulse 3s ease-in-out infinite; }
+.indicator-brown  { background: #8b4513; animation: pulse 3s ease-in-out infinite; }
+.indicator-green  { background: #00cc00; }
+.indicator-err    { background: #999; }
+
+.status-emoji { font-size: 1.4em; vertical-align: middle; line-height: 1; display: inline-block; }
+#lastAlertLink, #zoomAlertsLink { color: inherit; text-decoration: underline; cursor: pointer; }
+
+
+/* =========================================
+   4. RIGHT PANEL (LEGEND & TIMELINE BTN)
+========================================= */
 #right-panel {
   position: fixed;
   right: 24px;
@@ -89,6 +133,8 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
   transition: bottom 0.4s ease, top 0.4s ease, gap 0.4s ease;
 }
 #right-panel > * { pointer-events: auto; }
+body.idle #right-panel { bottom: 12px; gap: 0; }
+
 #legend {
   background: rgba(255,255,255,0.92);
   border-radius: 8px;
@@ -101,167 +147,41 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
 }
 #legend-icon { display: none; line-height: 0; }
 #legend .row { display: flex; align-items: center; gap: 8px; }
-#legend .dot {
-  width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
-}
+#legend .dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
 .dot-red    { background: #ff0000; }
 .dot-purple { background: #9922cc; }
 .dot-brown  { background: #8b4513; }
 .dot-yellow { background: #ffcc00; }
 .dot-green  { background: #00cc00; }
 
-#status {
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  background: rgba(255, 255, 255, 0.92);
-  border-radius: 4px;
-  padding: 4px 8px; /* Slightly more padding so it doesn't hug the text too tight */
-  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-  z-index: 1000;
-  direction: rtl;
-  width: max-content; 
-  max-width: 300px; /* 🚨 Raised from 140px to give it plenty of stretching room */
-}
+body.panel-open #legend { display: none; }
 
-/* 🌙 Dark Mode Match */
-body.dark #status {
-  background: rgba(48, 50, 56, 0.92);
-  color: #ddd;
-  border: 1px solid #555;
-}
-
-/* Shrink the glowing connection dot */
-
-#status .indicator {
-  display: inline-block; 
-  width: 6px; 
-  height: 6px; 
-  border-radius: 50%;
-  flex-shrink: 0;
-  /* (Removed the old margin-left so the 'gap' property handles the spacing perfectly) */
-}
-    
-/* The Disclaimer Line */
-#disclaimer-line {
-  font-size: 9px; 
-  color: #d9d9d9;
-  border-bottom: 1px solid rgba(0,0,0,0.06);
-  margin-bottom: 2px;
-  padding-bottom: 2px;
-  line-height: 1.3;
-  white-space: normal; /* 🚨 THE FIX: Allows the text to drop to a second line if needed */
-  text-align: center;  /* Keeps the text perfectly balanced */
-}
-    
-.status-main-row {
-  display: flex;
-  align-items: center;       /* Vertically aligns the dot with the text */
-  justify-content: center;   /* 🚨 SNAPS THE WHOLE ROW TO THE CENTER */
-  gap: 5px;                  /* Clean spacing between dot and text */
-  font-size: 10px; 
-  font-weight: 600;
-}
-    
-#statusStats {
-  display: flex;
-  flex-direction: column; 
-  align-items: center; 
-  text-align: center;  
-  gap: 0px; 
-  font-size: 8px; 
-  margin-top: 6px; /* 🚨 BUMPED UP FROM 2px: Pushes the stats down */
-  color: #666;
-  line-height: 1.2;
-}
-
-/* 🚨 Auto-hide logic for history mode */
-body.history-mode-active #disclaimer-line {
-  display: none !important;
-}
-    
-#status .indicator {
-  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
-  margin-left: 6px; vertical-align: middle;
-}
-.menu-item-info {
-  cursor: pointer;
-  padding: 8px 16px;
-  text-align: center;
-  line-height: 1.3;
-  width: 100%;
-  border: none;
-  background: transparent;
-  font: inherit;
-  color: inherit;
-}
-#menu-visitors-count {
-  display: block;
-  font-size: 18px;
-  font-weight: 700;
-  color: #1a56db;
-}
-.menu-visitors-sub {
-  display: block;
-  font-size: 11px;
-  color: #6b7280;
-}
-@media (hover: hover) {
-  .menu-item-info:hover { background: transparent !important; }
-}
-.indicator-red    { background: #ff0000; animation: pulse 3s ease-in-out infinite; }
-.indicator-purple { background: #9922cc; animation: pulse 3s ease-in-out infinite; }
-.indicator-yellow { background: #ffcc00; animation: pulse 3s ease-in-out infinite; }
-.indicator-brown  { background: #8b4513; animation: pulse 3s ease-in-out infinite; }
-.indicator-green  { background: #00cc00; }
-.indicator-err    { background: #999; }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-#lastAlertLink, #zoomAlertsLink { color: inherit; text-decoration: underline; cursor: pointer; }
-
-#errorDetail {
-  display: none;
-  position: fixed;
-  top: 142px;
-  left: 10px;
-  background: #fff;
-  border: 1px solid #e00;
-  border-radius: 6px;
-  padding: 8px 12px;
-  font-size: 12px;
+#timeline-btn {
+  max-height: 40px;
   max-width: 220px;
-  word-break: break-word;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  z-index: 1001;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  overflow: hidden;
+  transition: max-width 0.3s ease-out, max-height 0.3s ease-out, border-radius 0.2s ease-out, background 0.2s ease-out, opacity 0.4s ease;
+  display: none;
   direction: ltr;
-  color: #333;
-}   
-
-/* 📱 Mobile optimization */
-@media (max-width: 600px) {
-    
-    #status {
-    top: 6px;
-    left: 6px;
-    padding: 2px 5px !important;
-    width: max-content !important; /* 🚨 Allows it to stretch on mobile too */
-    max-width: 90vw !important;    /* Failsafe so it never goes off the phone screen */
-  }
-
-  #statusStats {
-    font-size: 7.5px !important; 
-    margin-top: 8px !important; /* 🚨 BUMPED UP AGAIN FOR MOBILE */
-  }
-  
-  /* 🚨 Push zoom controls down on mobile */
-  .maplibregl-ctrl-top-left {
-    position: absolute !important;
-    top: 75px !important; /* Snug fit under the mobile status box */
-    left: 6px !important;
-    margin: 0 !important;
-  }
 }
-    
-/* --- Unified panel (sidebar + timeline) --- */
+#timeline-btn.has-data { display: flex; background: rgba(254, 243, 199, 0.92); border-color: #f59e0b; }
+#timeline-btn-row { display: flex; align-items: center; gap: 6px; padding: 0 12px; height: 40px; direction: rtl; cursor: pointer; }
+.btn-icon { font-size: 18px; line-height: 1; flex-shrink: 0; }
+.btn-text { font-size: 13px; font-weight: 500; white-space: nowrap; }
+@media (hover: hover) { #timeline-btn:hover { background: rgba(253, 230, 138, 0.92); border-color: #f59e0b; } }
+
+body.idle #timeline-btn { opacity: 0; max-height: 0 !important; overflow: hidden; pointer-events: none; margin: 0; padding: 0; }
+body.panel-open #timeline-btn, body.driving #timeline-btn { display: none !important; }
+
+
+/* =========================================
+   5. UNIFIED PANEL (SIDEBAR / BOTTOM SHEET)
+========================================= */
 #unified-panel {
   display: none;
   position: fixed;
@@ -273,38 +193,18 @@ body.history-mode-active #disclaimer-line {
   transition: transform 0.28s ease;
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-/* Slim: compact box at bottom-right (mobile default) */
-#unified-panel.slim {
-  display: flex;
-  bottom: 0; left: 0; right: 0;
-  border-radius: 12px 12px 0 0;
-}
+
+/* Visibility flags based on panel state */
 #unified-panel.slim #up-location { display: none; }
 #unified-panel.slim #up-handle { display: none; }
-#unified-panel.full #up-timeline {
-  display: none !important;
-}
-#unified-panel.full #up-location {
-  display: flex !important;
-}#unified-panel.full {
-  display: flex;
-  bottom: 0; left: 0; right: 0;
-  max-height: 55vh;
-  border-radius: 12px 12px 0 0;
-}
-#unified-panel.full #up-event-list {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-}
-
+#unified-panel.full #up-timeline { display: none !important; }
+#unified-panel.full #up-location { display: flex !important; }
+#unified-panel.full #up-event-list { flex: 1; overflow-y: auto; min-height: 0; }
 #unified-panel.city-view-active #up-timeline,
 #unified-panel.city-view-active #timeline-transport,
-#unified-panel.city-view-active #up-close-row {
-  display: none !important;
-}
+#unified-panel.city-view-active #up-close-row { display: none !important; }
 
-/* Handle bar (mobile close target) */
+/* Handle bar */
 #up-handle {
   display: none;
   width: 36px; height: 4px;
@@ -315,36 +215,18 @@ body.history-mode-active #disclaimer-line {
 }
 #unified-panel.full #up-handle { display: block; }
 
-/* Location section (header + event list) — must shrink to fit within panel */
+/* Location Header */
 #up-location { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
-#up-location-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px 4px;
-  direction: rtl;
-  flex-shrink: 0;
-}
+#up-location-header { display: flex; align-items: center; gap: 6px; padding: 8px 12px 4px; direction: rtl; flex-shrink: 0; }
 #up-location-name { font-size: 15px; }
 #up-location-pop { font-size: 12px; color: #888; white-space: nowrap; margin-right: auto; margin-left: 12px; }
-body.dark #up-location-pop { color: #999; }
-#up-fav-star {
-  cursor: pointer; font-size: 18px; color: #ccc;
-  vertical-align: middle; user-select: none;
-}
-#up-location-close {
-  background: none; border: none; cursor: pointer;
-  font-size: 20px; color: #888; line-height: 1; padding: 4px;
-}
+#up-fav-star { cursor: pointer; font-size: 18px; color: #ccc; vertical-align: middle; user-select: none; }
+#up-location-close { background: none; border: none; cursor: pointer; font-size: 20px; color: #888; line-height: 1; padding: 4px; }
 #up-location-close:hover { color: #333; }
 
-/* Event list rows */
+/* Event List Rows */
 #up-event-list { direction: rtl; }
-.up-event-row {
-  padding: 3px 12px;
-  display: flex; align-items: baseline; gap: 8px;
-  cursor: pointer; direction: rtl;
-}
+.up-event-row { padding: 3px 12px; display: flex; align-items: baseline; gap: 8px; cursor: pointer; direction: rtl; }
 .up-event-row:hover { background: #f5f5f5; }
 .up-event-row.up-current { background: rgba(59,130,246,0.1); border-right: 3px solid #3b82f6; }
 .up-event-time { font-size: 12px; font-weight: bold; white-space: nowrap; }
@@ -352,639 +234,187 @@ body.dark #up-location-pop { color: #999; }
 .up-event-sep { border-bottom: 1px solid #ccc; padding-bottom: 3px; margin-bottom: 3px; }
 #up-event-list .up-empty { padding: 12px; color: #888; font-size: 13px; text-align: center; }
 
-/* Timeline section inside unified panel */
-#up-timeline {
-  flex-shrink: 0;
-  direction: ltr;
-  padding: 8px 12px 4px;
-  border-top: 1px solid #eee;
-}
+/* Timeline UI */
+#up-timeline { flex-shrink: 0; direction: ltr; padding: 8px 12px 4px; border-top: 1px solid #eee; }
+#timeline-slider-wrap { position: relative; width: 100%; padding-bottom: 6px; }
+#timeline-ticks { position: relative; width: calc(100% - 16px); margin: 0 8px; height: 8px; pointer-events: none; border-radius: 4px; overflow: hidden; background: #eee; }
+#timeline-ticks span { position: absolute; height: 100%; top: 0; opacity: 0.85; }
+#timeline-slider { width: 100%; cursor: pointer; -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; background: #93c5fd; }
+#timeline-slider:focus-visible { outline: 2px solid #1d4ed8; outline-offset: 2px; }
+#timeline-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 13px; height: 20px; background: #3b82f6; clip-path: polygon(50% 0%, 100% 45%, 100% 100%, 0% 100%, 0% 45%); cursor: pointer; }
+#timeline-slider::-moz-range-thumb { width: 13px; height: 20px; background: #3b82f6; clip-path: polygon(50% 0%, 100% 45%, 100% 100%, 0% 100%, 0% 45%); cursor: pointer; border: none; }
+#timeline-label { position: absolute; left: 0; margin-right: 5px; font-size: 12px; font-weight: bold; white-space: nowrap; font-variant-numeric: tabular-nums; }
+#timeline-date-row { display: flex; align-items: center; justify-content: center; position: relative; direction: ltr; }
+#timeline-date-nav { display: flex; align-items: center; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 999px; overflow: hidden; }
+#timeline-date-nav button { background: none; border: none; font-size: 16px; font-weight: bold; cursor: pointer; padding: 4px 10px; line-height: 1; color: #92400e; user-select: none; -webkit-user-select: none; }
+#timeline-date-nav button:hover { background: #fde68a; }
+#timeline-date-nav button:active { background: #fcd34d; }
+#timeline-date-nav button:disabled { opacity: 0.3; cursor: default; }
+#tl-date-nav {margin-left: 30px;}
+#tl-date-input::-webkit-calendar-picker-indicator { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer; }
+#tl-date-label { font-size: 13px; font-weight: 600; white-space: nowrap; color: #78350f; padding: 0 2px; }
 
-/* Close row at bottom of panel */
-#up-close-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 0 4px;
-  direction: rtl;
-  cursor: pointer;
-}
+#timeline-transport { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; direction: ltr; }
+#timeline-transport button { background: none; border: 1px solid #ccc; border-radius: 6px; font-size: 18px; cursor: pointer; padding: 4px 12px; line-height: 1; color: #333; user-select: none; }
+#timeline-transport button:hover { background: #eee; }
+#timeline-transport button:active { background: #ddd; }
+#timeline-transport #tl-prev, #timeline-transport #tl-next { font-size: 19px; background: rgba(219, 234, 254, 0.92); border-color: #93c5fd; }
+
+#up-close-row { display: flex; align-items: center; gap: 6px; padding: 6px 0 4px; direction: rtl; cursor: pointer; }
 #up-close-row:hover .btn-text { color: #111; }
-#up-close-row .tl-close { margin-left: 10px; color: #888; }
-#up-close-row .tl-close:hover { color: #333; }
+.tl-close { font-size: 16px; cursor: pointer; color: #888; margin-right: auto; }
+.tl-close:hover { color: #333; }
 
-/* Hide trigger button when panel open */
-body.panel-open #timeline-btn { display: none !important; }
-body.driving #timeline-btn { display: none !important; }
-body.panel-open #legend { display: none; }
-/* Selected-location label on map */
-.selected-label .maplibregl-popup-content {
-  background: rgba(59,130,246,0.9); color: #fff;
-  padding: 3px 8px; border-radius: 4px;
-  font-size: 13px; font-weight: bold; direction: rtl;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.3); pointer-events: none;
-}
-.selected-label .maplibregl-popup-tip { border-top-color: rgba(59,130,246,0.9); }
 
-/* Idle: hide slim panel but never hide full */
-body.idle #unified-panel.slim { opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
-
-/* Desktop overrides */
-/* 📱 Mobile Overrides */
-@media (max-width: 600px) {
-
-#status {
-    top: 6px;
-    left: 6px;
-    padding: 3px 5px !important;
-    max-width: 125px !important; /* 🚨 Give it a tiny bit more room on mobile */
-}
-    
- #status-text {
-    font-size: 10px !important; 
-  }
-  #statusStats {
-    font-size: 9px !important;
-    margin-top: 2px !important; 
-  }
-  #legend {
-    padding: 6px 10px !important;
-    font-size: 12px !important;
-    line-height: 1.3 !important;
-  }
-  #legend span, #legend div, #legend i {
-    font-size: 12px !important;
-  }
-  #unified-panel.slim, #unified-panel.full {
-    right: 0; bottom: 0;
-    width: 320px;
-    box-shadow: -2px 0 12px rgba(0,0,0,0.15);
-    transition: height 0.25s ease, border-radius 0.25s ease;
-  }
-  #unified-panel.slim {
-    border-radius: 12px 0 0 0;
-  }
-  #unified-panel.full {
-    height: 100vh; height: 100dvh;
-    max-height: none; border-radius: 0;
-  }
-  #unified-panel.full #up-handle { display: none; }
-  #unified-panel.full #up-event-list { max-height: none; }
-}
-
-.modal-backdrop {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 2000;
-  justify-content: center;
-  align-items: center;
-}
-.modal-backdrop.visible { display: flex; }
-
-.modal-content {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  max-width: 420px;
-  width: calc(100vw - 32px);
-  direction: rtl;
-  position: relative;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
-  font-size: 15px;
-  line-height: 1.7;
-}
-.modal-content h2 { margin: 0 0 12px; font-size: 20px; text-align: center; }
-.modal-content p { margin: 0 0 10px; color: #444; }
-.modal-content a { color: #0066cc; }
-#about-visitors-stat {
-  display: none;
-  margin: 14px 0 0;
-  background: #f0f4fa;
-  border-radius: 10px;
-  padding: 12px 16px;
-  text-align: center;
-}
-#about-visitors-stat .stat-number {
-  display: block;
-  font-size: 28px;
-  font-weight: 700;
-  color: #1a56db;
-  line-height: 1.2;
-}
-#about-visitors-stat .stat-label {
-  display: block;
-  font-size: 12px;
-  color: #666;
-  margin-top: 2px;
-}
-
-.modal-close {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: none;
-  border: none;
-  font-size: 22px;
-  cursor: pointer;
-  color: #888;
-  width: 28px;
-  height: 28px;
-  line-height: 28px;
-  text-align: center;
-  padding: 0;
-  border-radius: 4px;
-}
-.modal-close:hover { background: #eee; color: #333; }
-
-.location-item {
-  padding: 8px 12px;
-  cursor: pointer;
-  border-bottom: 1px solid #f0f0f0;
-  font-size: 14px;
-}
-.location-item:hover { background: #f5f5f5; }
-
-/* --- Hamburger button --- */
+/* =========================================
+   6. HAMBURGER MENU & MODALS
+========================================= */
 #menu-btn {
-  position: fixed !important;
-  top: 14px !important;
-  right: 14px !important;
-  bottom: auto !important; /* 🚨 Kills any bottom-pinning */
-  z-index: 9999 !important; /* 🚨 Forces it above all invisible layers */
-  background: rgba(255,255,255,0.92);
-  border: 1px solid #ccc;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  color: #555;
-  padding: 0;
+  position: fixed !important; top: 14px !important; right: 14px !important; bottom: auto !important; z-index: 9999 !important;
+  background: rgba(255,255,255,0.92); border: 1px solid #ccc; border-radius: 50%; width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2); color: #555; padding: 0;
 }
-
-/* --- Hamburger Dropdown Box --- */
 #menu-panel {
-  display: none;
-  position: fixed !important;
-  top: 60px !important; /* 🚨 Drops down right below the button */
-  right: 14px !important;
-  bottom: auto !important;
-  z-index: 9998 !important;
-  background: rgba(255,255,255,0.97);
-  border: 1px solid #ccc;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-  direction: rtl;
-  width: 320px;
-  max-width: calc(100vw - 28px);
-  max-height: calc(100vh - 80px);
-  overflow-y: auto;
+  display: none; position: fixed !important; top: 60px !important; right: 14px !important; bottom: auto !important; z-index: 9998 !important;
+  background: rgba(255,255,255,0.97); border: 1px solid #ccc; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); direction: rtl;
+  width: 320px; max-width: calc(100vw - 28px); max-height: calc(100vh - 80px); overflow-y: auto;
 }
-
-/* Feature-flag-gated elements: hidden by default, shown when flag is active */
-.f-gated { display: none !important; }
-body.f-predict #menu-predict.f-gated { display: block !important; }
 .menu-item { border-bottom: 1px solid #f0f0f0; }
 .menu-item:last-child { border-bottom: none; }
-.menu-item-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  cursor: pointer;
-  transition: background 0.15s;
-  width: 100%;
-  border: none;
-  background: transparent;
-  font: inherit;
-  color: inherit;
-}
-@media (hover: hover) {
-  .menu-item-row:hover { background: #f5f5f5; }
-}
-body.f-ellipse #ellipse-stub { display: block !important; }
-.menu-item { border-bottom: 1px solid #f0f0f0; }
-
-.menu-item:last-child { border-bottom: none; }
-.menu-item-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  cursor: pointer;
-  transition: background 0.15s;
-  width: 100%;
-  border: none;
-  background: transparent;
-  font: inherit;
-  color: inherit;
-}
-.menu-check {
-  margin-right: auto;
-  width: 16px;
-  height: 16px;
-  border: 2px solid #aaa;
-  border-radius: 3px;
-  flex-shrink: 0;
-  position: relative;
-}
-.menu-item.active .menu-check {
-  background: #3b82f6;
-  border-color: #3b82f6;
-}
-.menu-item.active .menu-check::after {
-  content: '';
-  position: absolute;
-  left: 3px;
-  top: 0px;
-  width: 5px;
-  height: 9px;
-  border: solid #fff;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
+.menu-item-row { display: flex; align-items: center; gap: 10px; padding: 12px 16px; cursor: pointer; transition: background 0.15s; width: 100%; border: none; background: transparent; font: inherit; color: inherit; }
+@media (hover: hover) { .menu-item-row:hover { background: #f5f5f5; } }
+.menu-check { margin-right: auto; width: 16px; height: 16px; border: 2px solid #aaa; border-radius: 3px; flex-shrink: 0; position: relative; }
+.menu-item.active .menu-check { background: #3b82f6; border-color: #3b82f6; }
+.menu-item.active .menu-check::after { content: ''; position: absolute; left: 3px; top: 0px; width: 5px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
 .menu-item.disabled .menu-item-row { opacity: 0.4; }
-.menu-item-icon {
-  font-size: 18px;
-  line-height: 1;
-  flex-shrink: 0;
-  width: 24px;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.menu-item-label {
-  font-size: 14px;
-  font-weight: 500;
-  white-space: nowrap;
-}
-.menu-item-value {
-  margin-right: auto;
-  font-size: 12px;
-  color: #6b7280;
-  white-space: nowrap;
-}
-.menu-sub-panel {
-  display: none;
-  padding: 8px 16px 12px;
-  border-top: 1px solid #eee;
-  direction: rtl;
-}
-/* 1. Shrink the padding so the rows take up less vertical space */
-#ext-section .menu-sub-panel .menu-item-row { 
-  padding: 8px 16px 8px 28px !important; 
-}
-/* 2. Shrink the icons slightly so they fit the smaller rows */
-#ext-section .menu-sub-panel .menu-item-icon {
-  transform: scale(0.85);
-}
-/* 3. Drop the font size slightly for a clean "sub-settings" look */
-#ext-section .menu-sub-panel .menu-item-label { 
-  font-size: 12px; 
-}
-/* 4. Shrink the search bar inside the sound menu */
-#ext-section #sound-search {
-  padding: 6px;
-  font-size: 13px;
-  margin-bottom: 6px;
-}
+.menu-item-icon { font-size: 18px; line-height: 1; flex-shrink: 0; width: 24px; text-align: center; display: flex; align-items: center; justify-content: center; }
+.menu-item-label { font-size: 14px; font-weight: 500; white-space: nowrap; }
+.menu-item-value { margin-right: auto; font-size: 12px; color: #6b7280; white-space: nowrap; }
+
+/* Sub-menus & Settings */
+.menu-sub-panel { display: none; padding: 8px 16px 12px; border-top: 1px solid #eee; direction: rtl; }
 #menu-sound.sound-open .menu-sub-panel { display: block; }
 #ext-section.ext-open > .menu-sub-panel { display: block; }
-/* "אזור ניסיוני" — footer footnote, visually outside the main menu */
 #ext-section { border-top: 1px solid #d1d5db; margin-top: 4px; }
 #ext-section > .menu-item-row { padding: 6px 16px; color: #9ca3af; }
 #ext-section > .menu-item-row .menu-item-label { font-size: 12px; font-weight: 400; }
 @media (hover: hover) { #ext-section > .menu-item-row:hover { background: transparent; } }
-/* Sub-items: indented + smaller font to signal secondary importance */
-#ext-section .menu-sub-panel .menu-item-row { padding-right: 28px; }
-#ext-section .menu-sub-panel .menu-item-label { font-size: 13px; color: #555; }
-.menu-select-wrap {
-  padding: 10px 16px 14px;
-  border-top: 1px solid #eee;
-}
-.menu-select {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  color: #334155;
-}
+#ext-section .menu-sub-panel .menu-item-row { padding: 8px 16px 8px 28px !important; }
+#ext-section .menu-sub-panel .menu-item-icon { transform: scale(0.85); }
+#ext-section .menu-sub-panel .menu-item-label { font-size: 12px; color: #555; }
+#ext-section #sound-search { padding: 6px; font-size: 13px; margin-bottom: 6px; }
 
-/* --- Right-panel buttons (timeline, ellipse) --- */
-#timeline-btn {
-  max-height: 40px;
-  max-width: 220px;
-  background: rgba(255,255,255,0.92);
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  overflow: hidden;
-  transition: max-width 0.3s ease-out, max-height 0.3s ease-out, border-radius 0.2s ease-out, background 0.2s ease-out, opacity 0.4s ease;
-}
-@media (hover: hover) {
-  #timeline-btn:hover {
-    background: rgba(253, 230, 138, 0.92);
-    border-color: #f59e0b;
-  }
-}
+.menu-setting .menu-item-row { padding-bottom: 4px; }
+.menu-setting-select { display: block; width: calc(100% - 66px); margin: 0 50px 10px auto; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; font: inherit; font-size: 13px; color: #334155; cursor: pointer; direction: rtl; }
 
-#timeline-btn {
-  display: none;
-  direction: ltr;
-}
-#timeline-btn.has-data { display: flex; background: rgba(254, 243, 199, 0.92); border-color: #f59e0b; }
-#timeline-btn-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 12px;
-  height: 40px;
-  direction: rtl;
-  cursor: pointer;
-}
-.btn-icon { font-size: 18px; line-height: 1; flex-shrink: 0; }
-.btn-text { font-size: 13px; font-weight: 500; white-space: nowrap; }
-.tl-close { font-size: 16px; cursor: pointer; color: #888; margin-right: auto; }
-.tl-close:hover { color: #333; }
-#timeline-transport {
-  display: flex;
-  align-items: center;
-  justify-content: center; /* 🚨 This snaps the media buttons to the exact middle */
-  gap: 8px; /* A little breathing room between the buttons */
-  margin-top: 6px; /* Keeps them from hugging the bottom of the calendar too tightly */
-  direction: ltr;
-}
-#timeline-transport button {
-  background: none;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 4px 12px;
-  line-height: 1;
-  color: #333;
-  user-select: none;
-  -webkit-user-select: none;
-}
-#timeline-transport button:hover { background: #eee; }
-#timeline-transport button:active { background: #ddd; }
-#timeline-transport #tl-prev, #timeline-transport #tl-next { font-size: 19px; background: rgba(219, 234, 254, 0.92); border-color: #93c5fd; }
-#timeline-slider-wrap {
-  position: relative;
-  width: 100%;
-  padding-bottom: 6px;
-}
-#timeline-ticks {
-  position: relative;
-  width: calc(100% - 16px);
-  margin: 0 8px;
-  height: 8px;
-  pointer-events: none;
-  border-radius: 4px;
-  overflow: hidden;
-  background: #eee;
-}
-#timeline-ticks span {
-  position: absolute;
-  height: 100%;
-  top: 0;
-  opacity: 0.85;
-}
-#timeline-slider {
-  width: 100%;
-  cursor: pointer;
-  -webkit-appearance: none;
-  appearance: none;
-  height: 4px;
-  border-radius: 2px;
-  background: #93c5fd;
-}
-#timeline-slider:focus-visible {
-  outline: 2px solid #1d4ed8;
-  outline-offset: 2px;
-}
-#timeline-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 13px;
-  height: 20px;
-  background: #3b82f6;
-  clip-path: polygon(50% 0%, 100% 45%, 100% 100%, 0% 100%, 0% 45%);
-  cursor: pointer;
-}
-#timeline-slider::-moz-range-thumb {
-  width: 13px;
-  height: 20px;
-  background: #3b82f6;
-  clip-path: polygon(50% 0%, 100% 45%, 100% 100%, 0% 100%, 0% 45%);
-  cursor: pointer;
-  border: none;
-}
-#timeline-label {
-  position: absolute;
-  left: 0;
-  margin-right: 5px;
-  font-size: 12px;
-  font-weight: bold;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-#timeline-date-row {
-  display: flex;
-  align-items: center;
-  justify-content: center; 
-  position: relative;
-  direction: ltr;
-}
-#timeline-date-nav {
-  display: flex;
-  align-items: center;
-  background: #fef3c7;
-  border: 1px solid #f59e0b;
-  border-radius: 999px;
-  overflow: hidden;
-}
-#timeline-date-nav button {
-  background: none;
-  border: none;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  padding: 4px 10px;
-  line-height: 1;
-  color: #92400e;
-  user-select: none;
-  -webkit-user-select: none;
-}
-#timeline-date-nav button:hover { background: #fde68a; }
-#timeline-date-nav button:active { background: #fcd34d; }
-#timeline-date-nav button:disabled { opacity: 0.3; cursor: default; }
-#timeline-date-nav button:disabled:hover { background: none; }
-#tl-date-nav {margin-left: 30px;}
-#tl-date-input::-webkit-calendar-picker-indicator {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
-}
-#tl-date-label {
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  color: #78350f;
-  padding: 0 2px;
-}
+/* Feature flags */
+.f-gated { display: none !important; }
+body.f-predict #menu-predict.f-gated { display: block !important; }
+body.f-ellipse #ellipse-stub { display: block !important; }
+
+/* Modals */
+.modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
+.modal-backdrop.visible { display: flex; }
+.modal-content { background: white; border-radius: 12px; padding: 24px; max-width: 420px; width: calc(100vw - 32px); direction: rtl; position: relative; box-shadow: 0 4px 24px rgba(0,0,0,0.3); font-size: 15px; line-height: 1.7; }
+.modal-content h2 { margin: 0 0 12px; font-size: 20px; text-align: center; }
+.modal-content p { margin: 0 0 10px; color: #444; }
+.modal-content a { color: #0066cc; }
+.modal-close { position: absolute; top: 10px; left: 10px; background: none; border: none; font-size: 22px; cursor: pointer; color: #888; width: 28px; height: 28px; line-height: 28px; text-align: center; padding: 0; border-radius: 4px; }
+.modal-close:hover { background: #eee; color: #333; }
+
+#about-visitors-stat { display: none; margin: 14px 0 0; background: #f0f4fa; border-radius: 10px; padding: 12px 16px; text-align: center; }
+#about-visitors-stat .stat-number { display: block; font-size: 28px; font-weight: 700; color: #1a56db; line-height: 1.2; }
+#about-visitors-stat .stat-label { display: block; font-size: 12px; color: #666; margin-top: 2px; }
+#menu-visitors-count { display: block; font-size: 18px; font-weight: 700; color: #1a56db; }
+.menu-visitors-sub { display: block; font-size: 11px; color: #6b7280; }
+
+.location-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+.location-item:hover { background: #f5f5f5; }
+
+/* Selected-location label on map */
+.selected-label .maplibregl-popup-content { background: rgba(59,130,246,0.9); color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 13px; font-weight: bold; direction: rtl; box-shadow: 0 1px 4px rgba(0,0,0,0.3); pointer-events: none; }
+.selected-label .maplibregl-popup-tip { border-top-color: rgba(59,130,246,0.9); }
+#errorDetail { display: none; position: fixed; top: 142px; left: 10px; background: #fff; border: 1px solid #e00; border-radius: 6px; padding: 8px 12px; font-size: 12px; max-width: 220px; word-break: break-word; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 1001; direction: ltr; color: #333; }
+
+
+/* =========================================
+   7. RESPONSIVE DESIGN: MOBILE OVERRIDES
+========================================= */
 @media (max-width: 600px) {
-    
-  #status {
-    top: 6px;
-    left: 6px;
-    padding: 3px 6px !important;
-    width: max-content !important; 
-    max-width: 85vw !important; /* 🚨 Allows it to stretch up to 85% of the phone screen */
-  }
+  #status { top: 6px; left: 6px; padding: 3px 5px !important; max-width: 85vw !important; width: max-content !important; }
+  #status-text { font-size: 10px !important; }
+  #statusStats { font-size: 11px !important; margin-top: 2px !important; }
+  .maplibregl-ctrl-top-left { top: 75px !important; left: 6px !important; }
 
-    
-  #right-panel {
-    right: 12px;
-    bottom: 24px;
-    gap: 6px;
-  }
+  #right-panel { right: 12px; bottom: 24px; gap: 6px; }
   
-  /* 📱 Responsive Menu Panel */
-#menu-panel { 
-    top: 65px; 
-    right: 10px;
-    left: 10px;
-    width: auto; 
-    max-width: none;
-    
-    /* 🚨 FALLBACK: For very old phones */
-    max-height: calc(100vh - 100px); 
-    /* 🚨 THE FIX: Dynamic Viewport respects the mobile address bar! */
-    max-height: calc(100dvh - 100px); 
-    
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    
-    /* 🚨 Force scrolling on Y, prevent horizontal clipping on X */
-    overflow-y: auto;
-    overflow-x: hidden; 
-    -webkit-overflow-scrolling: touch; 
-    
-    /* 🚨 Respects the physical iPhone/Android home bar area */
-    padding-bottom: calc(20px + env(safe-area-inset-bottom)); 
-  }
-
-  /* 📏 Fix labels that are too long for small phones */
-  .menu-item-label {
-    white-space: normal; /* 🚨 Allows text to wrap to a second line instead of pushing the checkmark away */
-    line-height: 1.2;
-    padding-left: 8px;
-  }
-
-  .menu-item-row {
-    padding: 14px 16px; /* Slightly larger tap targets for fingers */
-  }
-
-  #legend {
-    padding: 8px 12px;
-    font-size: 13px;
-    line-height: 1.6;
-    max-height: 140px;
-    cursor: pointer;
-    user-select: none;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-    margin-bottom: 3px;
-  }
-  /* ... rest of your legend collapsed logic ... */
-
+  #legend { padding: 6px 10px !important; font-size: 12px !important; line-height: 1.3 !important; max-height: 140px; cursor: pointer; user-select: none; overflow: hidden; transition: max-height 0.3s ease; margin-bottom: 3px; }
+  #legend span, #legend div, #legend i { font-size: 12px !important; }
   #legend .dot { width: 12px; height: 12px; }
-  #legend.collapsed {
-    display: flex; padding: 0;
-    align-items: center; justify-content: center;
-    border-radius: 50%;
-    width: 36px; height: 36px; max-height: 36px;
-  }
+  #legend.collapsed { display: flex; padding: 0; align-items: center; justify-content: center; border-radius: 50%; width: 36px; height: 36px; max-height: 36px; }
   #legend.collapsed .row { display: none; }
   #legend.collapsed #legend-icon { display: block; }
   
-  #errorDetail {
-    top: 140px;
-    left: 8px;
-  }
-  #timeline-btn {
-    max-height: 36px;
-  }
   #menu-btn { width: 36px; height: 36px; }
-    
-  #menu-panel { 
-    top: 50px; /* 🚨 Lifted from 56px to match the desktop alignment */
-    right: 12px;
-    width: calc(100vw - 24px);
-    max-width: none;
-  }
-
-  #timeline-btn-row {
-    height: 36px;
-    padding: 0 10px;
-    gap: 5px;
-  }
+  #menu-panel { top: 50px; right: 12px; left: 10px; width: calc(100vw - 24px); max-width: none; max-height: calc(100dvh - 100px); border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+  .menu-item-label { white-space: normal; line-height: 1.2; padding-left: 8px; }
+  .menu-item-row { padding: 14px 16px; }
+  
+  #timeline-btn { max-height: 36px; }
+  #timeline-btn-row { height: 36px; padding: 0 10px; gap: 5px; }
   #timeline-transport button { font-size: 16px; padding: 4px 10px; }
   #timeline-date-nav button { font-size: 14px; padding: 3px 8px; }
   #tl-date-label { font-size: 12px; }
   .btn-icon { font-size: 16px; }
   .btn-text { font-size: 12px; }
+  
+  #errorDetail { top: 140px; left: 8px; }
+  
   body.idle #right-panel { bottom: 8px; }
-}
-/* Idle mode: hide buttons after inactivity */
-body.idle #timeline-btn {
-  opacity: 0;
-  max-height: 0 !important;
-  overflow: hidden;
-  pointer-events: none;
-  margin: 0;
-  padding: 0;
-}
-body.idle #right-panel {
-  bottom: 12px;
-  gap: 0;
+  body.idle #unified-panel.slim { opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
+
+  /* Upgraded Mobile Bottom Sheet */
+  #unified-panel.slim, #unified-panel.full {
+    display: flex;
+    top: auto;
+    right: 0; bottom: 0; left: 0;
+    width: 100vw; 
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.25);
+    transition: max-height 0.3s ease, height 0.3s ease, border-radius 0.3s ease;
+  }
+  #unified-panel.slim { border-radius: 16px 16px 0 0; }
+  #unified-panel.full { height: auto; max-height: 55dvh; border-radius: 16px 16px 0 0; }
+  #unified-panel.full #up-handle { display: block; }
+  #unified-panel.full #up-event-list { max-height: none; padding-bottom: 20px; }
 }
 
-/* Settings items with stacked label + select */
-.menu-setting .menu-item-row { padding-bottom: 4px; }
-.menu-setting-select {
-  display: block;
-  width: calc(100% - 66px);
-  margin: 0 50px 10px auto;
-  padding: 5px 8px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background: #fff;
-  font: inherit;
-  font-size: 13px;
-  color: #334155;
-  cursor: pointer;
-  direction: rtl;
+
+/* =========================================
+   8. RESPONSIVE DESIGN: DESKTOP OVERRIDES
+========================================= */
+@media (min-width: 601px) {
+  /* Full-Height Right Sidebar Geometry */
+  #unified-panel.slim, #unified-panel.full {
+    display: flex;
+    top: 0;             
+    right: 0;           
+    bottom: 0;          
+    left: auto;
+    width: 380px;       
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;   
+  }
+  #unified-panel.full #up-handle { display: none; }
+  #up-location { padding-top: 15px; }
+  #up-timeline { padding-top: 20px; }
 }
 
-/* --- Dark theme --- */
+
+/* =========================================
+   9. DARK MODE MATCHING
+========================================= */
 body.dark #map { background: #1e3048; }
-/* Panels & controls: neutral-cool gray (contrasts with warm map tones) */
 body.dark #menu-btn { background: rgba(48,50,56,0.92); border-color: #555; color: #ccc; }
 body.dark #menu-btn:hover, body.dark #menu-btn[aria-expanded="true"] { background: rgba(40,60,90,0.92); border-color: #5b8def; }
 body.dark #menu-panel { background: rgba(48,50,56,0.97); border-color: #555; color: #ddd; }
@@ -996,14 +426,13 @@ body.dark .menu-item-value { color: #999; }
 body.dark .menu-check { border-color: #666; }
 body.dark .menu-item.disabled .menu-item-row { opacity: 0.35; }
 body.dark .menu-setting-select { background: #3a3c40; border-color: #555; color: #ddd; }
-body.dark #status { background: rgba(48,50,56,0.92); color: #ddd; }
+body.dark #status { background: rgba(48,50,56,0.92); color: #ddd; border: 1px solid #555; }
 body.dark #statusVisitors { color: #ffffff !important; }
 body.dark #menu-visitors-count { color: #6ba6ff; }
 body.dark .menu-visitors-sub { color: #999; }
 body.dark #historyTimeLabel { color: #999 !important; border-top-color: #4a4c50 !important; }
 body.dark #errorDetail { background: #30323a; color: #ddd; border-color: #c00; }
 body.dark #legend { background: rgba(48,50,56,0.92); color: #ddd; }
-/* Unified panel (location + timeline) */
 body.dark #unified-panel { background: #2e3038; }
 body.dark #up-location-name { color: #eee; }
 body.dark .up-event-row:hover { background: #3a3c40; }
@@ -1017,7 +446,6 @@ body.dark #up-fav-star { color: #666; }
 body.dark #up-location-close { color: #999; }
 body.dark #up-location-close:hover { color: #ddd; }
 body.dark #up-timeline { border-top-color: #4a4c50; }
-/* Timeline button & transport controls */
 body.dark #timeline-btn { background: rgba(55,52,38,0.92); border-color: #8a6e0b; }
 body.dark #timeline-btn.has-data { background: rgba(65,58,35,0.92); border-color: #b8860b; }
 body.dark .btn-text { color: #ddd; }
@@ -1036,7 +464,6 @@ body.dark #timeline-date-nav button:hover { background: #4a4525; }
 body.dark #timeline-date-nav button:active { background: #5a5530; }
 body.dark #tl-date-label { color: #dda520; }
 body.dark #up-close-row .btn-text { color: #999; }
-/* Modals */
 body.dark .modal-backdrop { background: rgba(0,0,0,0.7); }
 body.dark .modal-content { background: #30323a; color: #ddd; }
 body.dark .modal-content p { color: #ccc; }
@@ -1047,29 +474,64 @@ body.dark .modal-close:hover { background: #3a3c40; color: #ddd; }
 body.dark #about-visitors-stat { background: #253050; }
 body.dark #about-visitors-stat .stat-number { color: #6ba6ff; }
 body.dark #about-visitors-stat .stat-label { color: #999; }
-/* Search & inputs */
 body.dark #search-input, body.dark #sound-search { background: #3a3c40; border-color: #555; color: #ddd; }
 body.dark #search-results, body.dark #sound-results { border-color: #4a4c50; }
 body.dark .location-item { border-bottom-color: #3a3c40; color: #ddd; }
 body.dark .location-item:hover { background: #3a3c40; }
-/* Experimental section */
 body.dark #ext-section { border-top-color: #4a4c50; }
 body.dark #ext-section > .menu-item-row { color: #777; }
 body.dark #ext-section .menu-sub-panel .menu-item-label { color: #999; }
 body.dark .menu-sub-panel { border-top-color: #4a4c50; }
-/* MapLibre controls */
-.maplibregl-ctrl-attrib { background: rgba(255,255,255,0.5) !important; color: #888 !important; }
-.maplibregl-ctrl-attrib a { color: #888 !important; }
 body.dark .maplibregl-ctrl-group { background: rgba(48,50,56,0.92) !important; }
 body.dark .maplibregl-ctrl-group button { background: transparent !important; }
 body.dark .maplibregl-ctrl-group button + button { border-top: 1px solid #4a4c50 !important; }
 body.dark .maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: invert(1); }
 body.dark .maplibregl-ctrl-attrib { background: rgba(48,50,56,0.7) !important; color: #999 !important; }
 body.dark .maplibregl-ctrl-attrib a { color: #999 !important; }
-/* Sound alert button (has inline background) */
 body.dark #sound-all-btn { background: #3a3c40 !important; color: #ddd; }
 body.dark #sound-all-btn:hover { background: #444 !important; }
+body.dark #up-location-pop { color: #999; }
+
+
+/* =========================================
+   10. ULTIMATE FROSTED GLASS & TEXT WEIGHTS
+========================================= */
+/* Make all text inside the status box bold */
+#status, 
+#status #disclaimer-line, 
+#status .status-main-row, 
+#status #statusText,
+#status #statusStats,
+#status #statusStats span {
+  font-weight: bold !important;
+}
+
+/* 🪟 Premium Frosted Glass UI (Must be last to override everything) */
+#status, #unified-panel, #menu-panel, #timeline-btn, #legend {
+  background: rgba(255, 255, 255, 0.70) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+}
+
+body.dark #status, body.dark #unified-panel, body.dark #menu-panel, body.dark #timeline-btn, body.dark #legend {
+  background: rgba(30, 32, 38, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+}
+    
+/* Force ALL Status Box Text to Black in Light Mode */
+body:not(.dark) #status,
+body:not(.dark) #status #disclaimer-line,
+body:not(.dark) #status .status-main-row,
+body:not(.dark) #status #statusText,
+body:not(.dark) #status #statusStats,
+body:not(.dark) #status #statusStats span {
+  color: #000000 !important;
+}
 </style>
+
 </head>
 <body>
 <script>
@@ -1079,17 +541,13 @@ try {
   if (t === 'dark' || ((!t || t === 'auto') && window.matchMedia('(prefers-color-scheme: dark)').matches))
     document.body.classList.add('dark');
 } catch(e) {}
-
 </script>
-
-<div id="site-logo">
-  <h1 style="margin:0;font-size:0">מפת התגוננות</h1>
-</div>
 
 <div id="map"></div>
 <button id="menu-btn" type="button" title="תפריט" aria-label="תפריט" aria-expanded="false">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
 </button>
+
 <div id="menu-panel">
   <div id="menu-search" class="menu-item" style="padding:8px 16px 4px;">
     <input type="text" id="search-input" placeholder="חיפוש יישוב..." dir="rtl"
@@ -1157,18 +615,27 @@ try {
       <span class="menu-item-label">שתף חברים</span>
     </button>
   </div>
-    <div id="menu-about" class="menu-item">
+  <div id="menu-about" class="menu-item">
     <button class="menu-item-row" type="button">
-    <span class="menu-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><circle cx="12" cy="8" r="0.5" fill="currentColor"/></svg></span>
-    <span class="menu-item-label">אודות</span>
+      <span class="menu-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><circle cx="12" cy="8" r="0.5" fill="currentColor"/></svg></span>
+      <span class="menu-item-label">אודות</span>
     </button>
   </div>
+
+  <div id="menu-visitors-widget" style="padding: 14px 16px; border-top: 1px solid #eee; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 8px; direction: rtl;">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="#1a56db" style="flex-shrink: 0;">
+      <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"></path>
+    </svg>
+    <span id="menu-visitors-count" style="font-size: 16px; font-weight: bold; color: #1a56db; margin-left: 2px;">--</span>
+    <span class="menu-visitors-sub" style="font-size: 14px; color: #6b7280; font-weight: 500;">ב-24 השעות האחרונות</span>
+  </div>
+
   <div id="ext-section" class="menu-item">
     <button class="menu-item-row" type="button" id="ext-section-btn">
       <span class="menu-item-label">אזור ניסיוני</span>
       <svg id="ext-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:auto;transition:transform 0.2s;opacity:0.5"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
-      <div class="menu-sub-panel" style="padding:0; margin-bottom: 40px;">
+    <div class="menu-sub-panel" style="padding:0; margin-bottom: 40px;">
       <div id="menu-sound" class="menu-item">
         <button id="menu-sound-row" class="menu-item-row" type="button">
           <span class="menu-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg></span>
@@ -1176,15 +643,14 @@ try {
         </button>
         <div class="menu-sub-panel">
           <p style="margin:0 0 8px; font-weight:bold;">בחר מיקום לקבלת התרעות קוליות:</p>
-          <input type="text" id="sound-search" placeholder="חפש יישוב..." dir="rtl"
-                 style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px; margin-bottom:8px; font-size:14px;">
+          <input type="text" id="sound-search" placeholder="חפש יישוב..." dir="rtl" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px; margin-bottom:8px; font-size:14px;">
           <div id="sound-results" style="max-height:160px; overflow-y:auto; border:1px solid #eee; border-radius:6px; margin-bottom:8px;"></div>
           <div style="display:flex; gap:8px;">
             <button id="sound-all-btn" style="flex:1; padding:8px; border:none; background:#eee; border-radius:6px; cursor:pointer; font-weight:bold;">כל הארץ</button>
           </div>
         </div>
       </div>
-        <div id="menu-dev-tools" class="menu-item">
+      <div id="menu-dev-tools" class="menu-item">
         <button class="menu-item-row" type="button" id="dev-tools-toggle-btn">
           <span class="menu-item-icon">🛠️</span>
           <span class="menu-item-label">כלי מפתחים</span>
@@ -1212,11 +678,10 @@ try {
 </div>
 
 <div id="historyTimeLabel" style="display:none; font-size:11px; color:#555; margin-top:5px; padding-top:5px; border-top:1px solid #ddd;"></div>
-</div>
-    
+
 <div id="status">
   <div id="disclaimer-line">
-    ⚠️ נא להסמך על אמצעי ההתרעה הרשמיים בלבד
+    <span class="status-emoji">⚠️</span> נא להסתמך על אמצעי ההתרעה הרשמיים בלבד
   </div>
 
   <div class="status-main-row">
@@ -1229,12 +694,8 @@ try {
     <span id="statusAlertsToday" style="display:none; color:#ef4444; font-weight:bold;"></span>
   </div>
 </div>
-    
+
 <div id="errorDetail"></div>
-    <div id="about-visitors-stat">
-      <span class="stat-number"></span>
-      <span class="stat-label">מבקרים ב-24 השעות האחרונות</span>
-</div>
 
 <div id="tap-hint" style="display:none; position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:#fff; padding:10px 20px; border-radius:8px; font-size:14px; z-index:1001; direction:rtl; text-align:center; animation:tapHintFade 5s forwards; pointer-events:none;">
   לחצו על המפה לצפייה בהיסטוריית התרעות
@@ -1464,17 +925,27 @@ function apiFetch(endpoint) {
       if (!resp.ok) throw new Error('analytics request failed');
       return resp.json();
     }).then(function(data) {
+      
+      // --- 24 HOUR DATA (Updates the Menu Item) ---
       if (data && typeof data.visitors_24h === 'number') {
         lastVisitors24h = data.visitors_24h;
+        
+        // Push 24h count to the menu item
+        var menuVisCount = document.getElementById('menu-visitors-count');
+        if (menuVisCount) {
+          menuVisCount.textContent = data.visitors_24h.toLocaleString('he-IL');
+        }
       }
+      
+      // --- 1 HOUR DATA (Updates Map Status Box) ---
       if (data && typeof data.visitors_1h === 'number') {        
-        // Update the map status box
         var statusVisEl = document.getElementById('statusVisitors');
         if (statusVisEl) {
-          statusVisEl.textContent = data.visitors_1h.toLocaleString('he-IL') + ' מחוברים כעת 👥';
+          statusVisEl.innerHTML = data.visitors_1h.toLocaleString('he-IL') + ' מחוברים כעת <span class="status-emoji">👥</span>';
           statusVisEl.style.display = 'block';
         }
       }
+      
     }).catch(function(err) {
       console.warn('Analytics fetch failed:', err);
     });
@@ -1558,24 +1029,20 @@ function apiFetch(endpoint) {
     for (var i = 0; i < layers.length; i++) {
       var orig = layers[i];
       
-      // 🚨 1. VAPORIZE NOISE: Skip POI and transit layers completely
+      // 1. VAPORIZE NOISE: Skip heavy POI and transit layers completely
       if (orig['source-layer'] === 'pois' || orig['source-layer'] === 'transit') {
         continue;
       }
 
-      // 🚨 2. SAFE CLONE: Perfect copy without accidentally creating empty properties
+      // 2. BULLETPROOF DEEP CLONE: Prevents MapLibre parser crashes
       var l = JSON.parse(JSON.stringify(orig));
 
+      // 3. ERASE ALL DOTS/ICONS
       if (l.type === 'symbol') {
-        // 🚨 3. ERASE ALL DOTS/ICONS: Delete any instruction containing the word 'icon'
         if (l.layout) {
           for (var key in l.layout) {
             if (key.indexOf('icon') === 0) delete l.layout[key];
-          }/*
-          // RESTORE CITY NAMES & FORCE HEBREW
-          if (l.layout['text-field']) {
-            l.layout['text-field'] = ['coalesce', ['get', 'name:he'], ['get', 'name']];
-          }*/
+          }
         }
         if (l.paint) {
           for (var pKey in l.paint) {
@@ -1605,7 +1072,6 @@ function apiFetch(endpoint) {
     
     return cleanLayers;
   }
-
 
   var WARM_FLAVOR = Object.assign({}, (basemaps.themes ? basemaps.themes.light : basemaps.LIGHT), {
     background:            '#f5f0e8',
@@ -1728,34 +1194,50 @@ function apiFetch(endpoint) {
   }
 
   // --- Map setup ---
-  var DEFAULT_CENTER = [32.2, 34.9], DEFAULT_ZOOM = 7.2;
+    var DEFAULT_CENTER = [32.2, 34.9], DEFAULT_ZOOM = 7.2;
+
+  // 🚨 1. Use localStorage so it survives tab switching and mobile app backgrounding
+  var savedCenter = DEFAULT_CENTER;
+  var savedZoom = DEFAULT_ZOOM;
+  try {
+    var sZoom = localStorage.getItem('oref-saved-zoom');
+    var sCenter = localStorage.getItem('oref-saved-center');
+    if (sZoom) savedZoom = parseFloat(sZoom);
+    if (sCenter) {
+      var parsed = JSON.parse(sCenter);
+      // Safety check to prevent map crashes from corrupted data
+      if (Array.isArray(parsed) && parsed.length === 2) {
+        savedCenter = parsed;
+      }
+    }
+  } catch(e) {}
 
   maplibregl.setRTLTextPlugin(
     'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js',
     null, true
   );
 
-var PMTILES_URL = 'pmtiles://https://pmtiles.alprazolam.cfd/middle-east.pmtiles';
-var MAP_STYLE = buildMapStyle(isDarkActive, currentLang);
+  var PMTILES_URL = 'pmtiles://https://pmtiles.alprazolam.cfd/middle-east.pmtiles';
+  var MAP_STYLE = buildMapStyle(isDarkActive, currentLang);
 
   var map = new maplibregl.Map({
     container: 'map',
     style: MAP_STYLE,
-    center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], 
-    zoom: DEFAULT_ZOOM,
+    center: [savedCenter[1], savedCenter[0]], 
+    zoom: savedZoom,
     maxBounds: [[25.0, 6.0], [70.0, 44.0]],
     touchPitch: false,
     maxTileCacheZoomLevels: 8,
     fadeDuration: 0,
     attributionControl: false
   });
-  
+
   var mapLoaded = false;
   var polygonsGeoJSON = { type: 'FeatureCollection', features: [] };
   var featureMap = {}; 
   var pendingPolygonData = null;
 
-  map.on('load', function() {
+    map.on('load', function() {
     mapLoaded = true;
     console.log("Map engine started successfully.");
 
@@ -1810,7 +1292,7 @@ var MAP_STYLE = buildMapStyle(isDarkActive, currentLang);
       paint: { 'fill-opacity': 0, 'fill-color': 'transparent' }
     });
 
-      // 🚨 LAYER 1: The Neon Glow (Thick and blurred)
+    // 🚨 LAYER 1: The Neon Glow
     map.addLayer({
       id: 'alerts-glow',
       type: 'line',
@@ -1818,8 +1300,8 @@ var MAP_STYLE = buildMapStyle(isDarkActive, currentLang);
       paint: {
         'line-color': ['coalesce', ['feature-state', 'lineColor'], 'transparent'],
         'line-opacity': ['coalesce', ['feature-state', 'lineOpacity'], 0], 
-        'line-width': 8,  /* Huge width */
-        'line-blur': 6    /* Heavy blur */
+        'line-width': 8,
+        'line-blur': 6
       }
     });
 
@@ -1829,23 +1311,37 @@ var MAP_STYLE = buildMapStyle(isDarkActive, currentLang);
       type: 'line',
       source: 'alerts-source',
       paint: {
-        'line-color': ['coalesce', ['feature-state', 'lineColor'], 'transparent'],
+        'line-color': ['coalesce', ['feature-state', 'lineColor'], '#aaaaaa'],
         'line-opacity': ['coalesce', ['feature-state', 'lineOpacity'], 0], 
-        'line-width': 1.5 /* Sharp solid core */
+        'line-width': 1.5 
       }
     });
 
-      // 🚨 NEON BREATHING ENGINE
+    // 🚨 UPGRADED NEON BREATHING ENGINE (Aggressive Radar Pulse)
     function renderNeonBreathing(timestamp) {
-      if (!map.getLayer('alerts-glow')) return; // Safety check
-      var pulseWidth = 8 + Math.sin(timestamp / 250) * 3;
-      var pulseBlur = 6 + Math.sin(timestamp / 250) * 2;
+      if (!map.getLayer('alerts-glow')) return; 
+
+      // 1. The Math: Using absolute sine creates a sharp "heartbeat" spike rather than a soft wave
+      var pulseMath = Math.abs(Math.sin(timestamp / 350)); 
+      
+      // 2. The Flare: Base width of 4px, but spikes aggressively up to 24px!
+      var pulseWidth = 4 + (pulseMath * 20); 
+      
+      // 3. The Blur: Gets heavily blurred as it expands, creating a true "glowing gas" effect
+      var pulseBlur = 4 + (pulseMath * 12);
+      
+      // 4. Inject it into the GPU 60 times a second
       map.setPaintProperty('alerts-glow', 'line-width', pulseWidth);
       map.setPaintProperty('alerts-glow', 'line-blur', pulseBlur);
+      
+      // Optional: Make the inner hard line pulse slightly too for extra impact
+      map.setPaintProperty('alerts-stroke', 'line-width', 1.5 + (pulseMath * 1.5));
+
       requestAnimationFrame(renderNeonBreathing);
     }
     requestAnimationFrame(renderNeonBreathing);
-    
+
+
     map.on('click', 'alerts-hit', function(e) {
       if (menuOpen || drivingModeFeatureEnabled) return;
       e.originalEvent.stopPropagation();
@@ -1853,7 +1349,6 @@ var MAP_STYLE = buildMapStyle(isDarkActive, currentLang);
       var validFeature = null;
       for (var i = 0; i < e.features.length; i++) {
           var fName = e.features[i].properties.name.toLowerCase();
-          // 🚨 BULLETPROOF CLICK FILTER
           if (!fName.includes('border') && !fName.includes('israel') && !fName.includes('ישראל')) {
               validFeature = e.features[i];
               break;
@@ -1870,16 +1365,38 @@ var MAP_STYLE = buildMapStyle(isDarkActive, currentLang);
       if (!menuOpen && !drivingModeFeatureEnabled) map.getCanvas().style.cursor = 'pointer';
     });
       
-    map.on('mouseleave', 'alerts-hit', function() { map.getCanvas().style.cursor = ''; });
+    map.on('mouseleave', 'alerts-hit', function() { 
+      map.getCanvas().style.cursor = ''; 
+    });
 
-    // 🚨 THIS IS THE CRITICAL BRIDGE WE ACCIDENTALLY DELETED!
+    // 🚨 FIX: Force MapLibre to redraw alerts the millisecond it finishes loading polygons!
+    map.on('sourcedata', function(e) {
+      if (e.sourceId === 'alerts-source' && e.isSourceLoaded) {
+        if (typeof isLiveMode !== 'undefined' && isLiveMode) {
+          var now = Date.now();
+          for (var loc in locationStates) {
+            var entry = locationStates[loc];
+            var opacity = 0.3;
+            if (entry.state === 'green') {
+              var elapsed = now - entry.since;
+              if (elapsed >= GREEN_FADE_MS) continue;
+              opacity = 0.5 * Math.max(0, 1 - (elapsed / GREEN_FADE_MS));
+            }
+            // Force the styling back onto the map!
+            applyFeatureStyle(loc, entry.state, opacity);
+          }
+        }
+      }
+    });
+
     if (pendingPolygonData) {
       var cb = pendingPolygonCallback;
       pendingPolygonCallback = null;
       buildPolygons(pendingPolygonData, cb);
       pendingPolygonData = null;
     }
-  });  
+  }); // <--- 🚨 This bracket closes the entire map.on('load') function!
+
     
     function updateMapLibreSource() {
     if (!mapLoaded) return;
@@ -2410,9 +1927,17 @@ var MAP_STYLE = buildMapStyle(isDarkActive, currentLang);
     lastFollowPauseAt = now;
     pauseFollowMode(FOLLOW_PAUSE_MS, false);
   });
-  map.on('moveend', function() {
+      map.on('moveend', function() {
     isZoomingProgrammatically = false;
     if (isFollowModeActive()) maybeFollowUserLocation(false);
+    
+    // 🚨 Save permanently to localStorage so it survives tab switching and reloads
+    try {
+      localStorage.setItem('oref-saved-zoom', map.getZoom().toString());
+      var c = map.getCenter();
+      // DEFAULT_CENTER expects [lat, lng], but MapLibre outputs {lng, lat}
+      localStorage.setItem('oref-saved-center', JSON.stringify([c.lat, c.lng]));
+    } catch(err) {}
   });
 
   document.addEventListener('app:locationChanged', function() {
@@ -2936,30 +2461,47 @@ function applyFeatureStyle(name, state, opacity) {
     if (id === undefined) return;
     map.removeFeatureState({ source: 'alerts-source', id: id });
   }
+  // 🚨 ANTI-ZOMBIE CACHE: Remembers faded green alerts so they don't respawn
+    // 🚨 SCORCHED EARTH ANTI-ZOMBIE CACHE
+  var deadGreenCache = {}; 
 
-function setLocationState(name, state, since) {
+  function setLocationState(name, state, since) {
     var existing = locationStates[name];
+    var now = Date.now();
 
-    // Priority: red > purple > yellow. Green always overrides (all-clear).
+    // 1. If we are trying to spawn a green alert, but this city is in the graveyard...
+    if (state === 'green' && deadGreenCache[name] && (now - deadGreenCache[name] < 5 * 60000)) {
+        return; // Stay dead.
+    }
+
+    // 2. If a REAL danger alert hits (red/purple/brown), resurrect it from the graveyard!
+    if (state !== 'green') {
+        delete deadGreenCache[name];
+    }
+
     var PRIORITY = { red: 4, brown: 3, purple: 2, yellow: 1, green: 0 };
+    
     if (existing) {
       if (state !== 'green') {
         if (existing.state === state) return;
         if ((PRIORITY[existing.state] || 0) > (PRIORITY[state] || 0)) return;
       } else if (existing.state === 'green') {
-        return; // already green — don't reset the fade timer
+        return; // Already green, DO NOT reset the clock!
       }
     }
 
     if (nameToId[name] === undefined) return;
 
-    var now = Date.now();
+    // 3. Trust 'since' if provided (from history), otherwise use exact 'now'
+    var effectiveSince = since ? since : now;
     
-    // 🚨 THE FIX: Ignore server drift. Lock the green timer to the browser's exact local time.
-    var effectiveSince = (state === 'green') ? now : (since || now);
+    // 4. Safety execution: If we got a green alert that is ALREADY older than 2 minutes, kill it immediately.
+    if (state === 'green' && (now - effectiveSince >= GREEN_FADE_MS)) {
+        deadGreenCache[name] = now;
+        return;
+    }
 
     var opacity = state === 'green' ? 0.5 : 0.3;
-    
     applyFeatureStyle(name, state, opacity);
     locationStates[name] = { state: state, since: effectiveSince };
     playSoundForState(state, name);
@@ -2968,12 +2510,58 @@ function setLocationState(name, state, since) {
   function removeLocation(name) {
     var entry = locationStates[name];
     if (entry) {
+      if (entry.state === 'green') {
+          deadGreenCache[name] = Date.now(); // Put it in the graveyard
+      }
+      // 🚨 FORCE OPACITY TO 0 BEFORE REMOVING STATE TO GUARANTEE IT VANISHES
+      applyFeatureStyle(name, 'green', 0); 
       resetFeatureStyle(name);
     }
     if (selectedLocation === name) closeLocationPanel();
     delete locationStates[name];
   }
 
+  function fadeGreenMarkers() {
+    if (!isLiveMode) return;
+    var now = Date.now();
+    var toRemove = [];
+    
+    for (var name in locationStates) {
+      var entry = locationStates[name];
+      if (entry.state !== 'green') {
+        if (now - entry.since >= ALERT_MAX_AGE_MS) toRemove.push(name);
+        continue;
+      }
+      
+      var elapsed = now - entry.since;
+      
+      // 🚨 IF IT HAS BEEN 2 MINUTES, KILL IT
+      if (elapsed >= GREEN_FADE_MS) {
+        toRemove.push(name);
+      } else {
+        // Fade it out gradually
+        var opacity = Math.max(0, 0.5 * (1 - (elapsed / GREEN_FADE_MS)));
+        var id = nameToId[name];
+        if (id !== undefined) {
+          map.setFeatureState({ source: 'alerts-source', id: id }, {
+            fillOpacity: opacity,
+            lineOpacity: opacity + 0.15
+          });
+        }
+      }
+    }
+    
+    for (var i = 0; i < toRemove.length; i++) {
+      removeLocation(toRemove[i]);
+    }
+    
+    if (toRemove.length > 0) {
+      updateLiveStatus();
+      // 🚨 DON'T FORGET THIS LINE! It tells the app the map state changed
+      document.dispatchEvent(new CustomEvent('app:stateChanged'));
+    }
+  }
+    
   // --- Alert history per location ---
 
   function updateOverlay() {
@@ -3469,7 +3057,13 @@ function processLiveAlert(alert) {
     if (state !== 'green') lastDangerTime = Date.now();
     var locations = alert.data;
     
-    var now = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date());
+    var d = new Date();
+    // Force Jerusalem time safely
+    d = new Date(d.toLocaleString("en-US", {timeZone: "Asia/Jerusalem"}));
+    var pad = function(n) { return n < 10 ? '0' + n : n; };
+    // Bulletproof YYYY-MM-DD HH:mm:ss format
+    var now = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+
     for (var i = 0; i < locations.length; i++) {
       var loc = normalizeGeresh(locations[i]);
       
@@ -3598,51 +3192,173 @@ function fadeGreenMarkers() {
     map.fitBounds(bounds, { padding: 80, maxZoom: 10 });
   }
 
-  function updateLiveStatus() {
+    function updateLiveStatus() {
     if (!isLiveMode) return;
     if (!initialized) return;
-    var dominant = null, bestP = -1, residentTotal = 0;
+    
+    // Track the number of red polygons
+    var dominant = null, bestP = -1, residentTotal = 0, activeZonesCount = 0;
     var P = { red: 4, brown: 3, purple: 2, yellow: 1 };
+    
     for (var name in locationStates) {
       var s = locationStates[name].state;
-      if (s !== 'green' && (P[s] || 0) > bestP) {
-        bestP = P[s] || 0;
-        dominant = s;
+      
+      if (s !== 'green') {
+        activeZonesCount++; // Count this as an active alert zone
+        
+        if ((P[s] || 0) > bestP) {
+          bestP = P[s] || 0;
+          dominant = s;
+        }
       }
-        if ((s === 'red' || s === 'purple' || s === 'brown') && locationPopulations) {
+      
+      if ((s === 'red' || s === 'purple' || s === 'brown') && locationPopulations) {
         var pop = locationPopulations[name];
         if (pop) residentTotal += pop;
       }
     }
+    
     if (dominant) {
-      var statusLabel = (unifiedPanelState === 'closed' && residentTotal > 0)
-        ? residentTotal.toLocaleString('he-IL') + ' \u05D1\u05DE\u05E7\u05DC\u05D8\u05D9\u05DD'
-        : 'התרעות פעילות';
+      var statusLabel = 'התרעות פעילות';
+      
+      // 🚨 UPGRADED: Flipped the order! (Population • Zones)
+      if (unifiedPanelState === 'closed') {
+        if (residentTotal > 0) {
+           statusLabel = residentTotal.toLocaleString('he-IL') + ' במקלטים • ' + activeZonesCount + ' אזורי התראה';
+        } else if (activeZonesCount > 0) {
+           statusLabel = activeZonesCount + ' אזורי התראה';
+        }
+      }
+      
       setStatusHTML(dominant, '<a href="#" id="zoomAlertsLink">' + statusLabel + '</a>');
-        } else {
-      var rel = formatRelativeTime(lastDangerTime);
-      if (rel) {
-        var lastLine = (dayHistoryReady && extendedHistory.length > 0)
-          ? '<a href="#" id="lastAlertLink" style="color: inherit; text-decoration: underline dotted;">התרעה אחרונה ' + rel + '</a>'
-          : 'התרעה אחרונה ' + rel;
         
-        // 🚨 Forced onto one sleek line with a refined 9px font size
-        setStatusHTML('green', '<span style="font-size: 9px; font-weight: 500; white-space: nowrap;">אין התרעות • ' + lastLine + '</span>');
+    } else {
+      // מציאת זמן ההתרעה האחרונה מתוך ההיסטוריה המורחבת או משתנה זמן הסכנה האחרון
+      var lastTs = 0;
+      if (extendedHistory.length > 0) {
+          lastTs = extendedHistory[extendedHistory.length - 1].alertDate;
+      } else if (lastDangerTime > 0) {
+          lastTs = lastDangerTime;
+      }
+
+      var rel = formatRelativeTime(lastTs);
+      if (rel && lastTs > 0) {
+        // יצירת קישור עם מאפיין data-ts ששומר את זמן ההתרעה
+        var lastLine = '<a href="#" id="lastAlertLink" data-ts="' + lastTs + '" style="color: inherit; text-decoration: underline dotted;">התרעה אחרונה ' + rel + '</a>';
+        
+        setStatusHTML('green', '<span style="font-size: 10px; font-weight: bold; white-space: nowrap;">אין התרעות • ' + lastLine + '</span>');
+        
+        // הוספת אירוע לחיצה לקישור החדש שנוצר
+        var link = document.getElementById('lastAlertLink');
+        if (link) {
+            link.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var ts = Number(this.getAttribute('data-ts'));
+                if (ts && window.show_history) {
+                    // שימוש בפונקציית show_history כדי לעבור לזמן המדויק
+                    window.show_history(new Date(ts).toISOString()).catch(function(err) {
+                        console.error("Failed to navigate to alert:", err);
+                        if (typeof openTimelineToLastEvent === 'function') openTimelineToLastEvent();
+                    });
+                } else if (typeof openTimelineToLastEvent === 'function') {
+                    openTimelineToLastEvent();
+                }
+            };
+        }
       } else {
-        setStatusHTML('green', '<span style="font-size: 9px; font-weight: 500;">אין התרעות פעילות</span>');
+        setStatusHTML('green', '<span style="font-size: 10px; font-weight: bold;">אין התרעות פעילות</span>');
       }
     }
-    // 🚨 NEW: The Daily Alerts Counter Logic (Safely inside the function now!)
+
     var alertCountEl = document.getElementById('statusAlertsToday');
     if (alertCountEl) {
       if (isViewingToday() && extendedHistory.length > 0) {
-        alertCountEl.textContent = extendedHistory.length + " התרעות היום 📉";
-        alertCountEl.style.display = 'inline-block';
+        
+        var bounds = viewingDayBounds();
+        var todayCount = 0;
+        var lastEventTime = 0;
+        
+        // 🚨 Any alerts within 5 minutes of each other count as the SAME barrage/event
+        var EVENT_GAP_MS = 5 * 60000; 
+        
+        for (var i = 0; i < extendedHistory.length; i++) {
+          var entry = extendedHistory[i];
+          if (entry.alertDate >= bounds.start && entry.alertDate <= bounds.end) {
+            
+            // Ignore 'green' all-clear messages
+            if (entry.state !== 'green') {
+              
+              // If this alert happened MORE than 5 minutes after the last one, count it as a NEW attack
+              if (entry.alertDate - lastEventTime > EVENT_GAP_MS) {
+                todayCount++;
+              }
+              
+              // Push the window forward to the time of this latest alert
+              lastEventTime = entry.alertDate;
+            }
+          }
+        } 
+        
+        if (todayCount > 0) {
+          alertCountEl.textContent = todayCount + " התרעות היום 📉";
+          alertCountEl.style.display = 'inline-block';
+        } else {
+          alertCountEl.style.display = 'none';
+        }
       } else {
         alertCountEl.style.display = 'none';
       }
     }
+  } // <--- This final bracket safely closes the updateLiveStatus function!
+
+
+  // --- Status indicator ---
+  function setStatus(state, text) {
+    var dot = document.getElementById('statusDot');
+    var txt = document.getElementById('statusText');
+    var statusEl = document.getElementById('status');
+    dot.className = 'indicator indicator-' + state;
+    txt.textContent = text;
+    if (state !== 'err') {
+      statusEl.style.cursor = '';
+      lastErrorMsg = '';
+      document.getElementById('errorDetail').style.display = 'none';
+    } else {
+      statusEl.style.cursor = 'pointer';
+    }
   }
+
+  function setStatusHTML(state, html) {
+    var dot = document.getElementById('statusDot');
+    var txt = document.getElementById('statusText');
+    var statusEl = document.getElementById('status');
+    dot.className = 'indicator indicator-' + state;
+    txt.innerHTML = html;
+    var link = document.getElementById('lastAlertLink');
+    if (link) {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openTimelineToLastEvent();
+      });
+    }
+    var zoomLink = document.getElementById('zoomAlertsLink');
+    if (zoomLink) {
+      zoomLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeTimelinePanel();
+        maybeZoomToEvent();
+      });
+    }
+    statusEl.style.cursor = '';
+    lastErrorMsg = '';
+    document.getElementById('errorDetail').style.display = 'none';
+  }
+
+
+
       
   // --- Status indicator ---
   function setStatus(state, text) {
@@ -3798,9 +3514,14 @@ function processHistoryEntry(entry) {
           extendedHistory.sort(function(a, b) { return a.alertDate - b.alertDate; });
       }
       console.log('History: processed', newEntries, 'new entries');
+      
+      // 🚨 ADD THIS LINE to update the counter every time a new live alert is pushed to history
+      updateLiveStatus(); 
+      
       document.dispatchEvent(new CustomEvent('app:stateChanged'));
     }
   }
+    
 function fetchHistory(onDone) {
     apiFetch('history')
       .then(function(resp) {
@@ -3866,9 +3587,9 @@ function fetchHistory(onDone) {
   }
 
   // --- Extended history (timeline) ---
-  function prefetchDayHistory(dateStr) {
+    function prefetchDayHistory(dateStr) {
     if (prefetchedDayHistory[dateStr]) return;
-    fetch('/api/day-history?date=' + dateStr)
+    fetch(PROXY_BASE + apiPrefix + '/day-history?date=' + dateStr)
       .then(function(resp) {
         if (!resp.ok) return;
         return resp.json();
@@ -3956,6 +3677,7 @@ function processEntries(entries) {
         console.error('Day history fetch error:', err);
         dayHistoryReady = true;
         if (onDone) onDone();
+        updateLiveStatus(); 
       });
   }
 
@@ -4081,7 +3803,7 @@ function processEntries(entries) {
     var TICK_COLORS = { red: '#e74c3c', brown: '#8b4513', purple: '#9b59b6', yellow: '#f1c40f', green: '#2ecc71' };
     var PLAY_SPEED = 510;
 
-function updateDateNav() {
+    function updateDateNav() {
       var d = timelineDate || todayDateStr();
       
       // Update the invisible calendar to the currently viewed date and set min/max limits
@@ -4089,20 +3811,15 @@ function updateDateNav() {
       dateInput.max = todayDateStr();
       dateInput.min = DAY_HISTORY_MIN_DATE;
 
-      if (isViewingToday()) {
-         // UI State 1: Today (No arrows, big calendar prompt)
-         dateLabel.innerHTML = '📅 בחר תאריך';
-         datePrevBtn.style.display = 'none';
-         dateNextBtn.style.display = 'none';
-      } else {
-         // UI State 2: History (Show arrows and the formatted date)
-         dateLabel.innerHTML = '📅 ' + formatDateLabel(d);
-         datePrevBtn.style.display = 'block';
-         dateNextBtn.style.display = 'block';
-         
-         datePrevBtn.disabled = (d <= DAY_HISTORY_MIN_DATE);
-         dateNextBtn.disabled = isViewingToday();
-      }
+      // 🚨 ALWAYS show the real date! (formatDateLabel already knows to say "היום" for today)
+      dateLabel.innerHTML = '📅 ' + formatDateLabel(d);
+
+      // 🚨 Show the arrows at all times, but just disable the 'Next' button if it's today
+      datePrevBtn.style.display = 'block';
+      dateNextBtn.style.display = 'block';
+      
+      datePrevBtn.disabled = (d <= DAY_HISTORY_MIN_DATE);
+      dateNextBtn.disabled = isViewingToday();
     }
     updateDateNav();
 
@@ -4894,15 +4611,21 @@ function updateDateNav() {
       });
 
       // Build polygons; start polling only after nameToId is populated
-      buildPolygons(data, function() {
+            buildPolygons(data, function() {
         pollingStarted = true;
-        // Always do the initial data fetch to populate state and set initialized=true
+        
+        // 1. Fetch live alerts and immediate history instantly (critical for survival)
         fetchLiveAlerts();
         fetchHistory(function() {
           initialized = true;
           if (shouldAutoZoomToEvents() && !selectedLocation) maybeZoomToEvent();
         });
-        fetchExtendedHistory(function() { rebuildTimelineFn(); });
+        
+        // 🚨 2. Defer the heavy timeline history fetch by 800ms so the map tiles can load first!
+        setTimeout(function() {
+            fetchExtendedHistory(function() { rebuildTimelineFn(); });
+        }, 800);
+
         if ('ontouchstart' in window) setTimeout(showPolygonHint, 500);
         // Only start interval timers if the tab is currently visible;
         // if hidden, visibilitychange → visible will call resumePolling()
@@ -5267,51 +4990,7 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js');
 }
 </script>
-<script>
-(function() {
-  var STORAGE_KEY = 'pwa_install';
-  var stored;
-  try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch (e) { stored = {}; }
-  // Don't prompt if already installed or permanently dismissed
-  if (stored.installed || stored.dismissed) return;
 
-  function saveStored() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(stored)); } catch (e) {}
-  }
-
-  var deferredPrompt = null;
-  window.addEventListener('beforeinstallprompt', function(e) {
-    e.preventDefault();
-    deferredPrompt = e;
-
-    var today = new Date().toISOString().slice(0, 10);
-    if (stored.lastDay !== today) {
-      stored.lastDay = today;
-      stored.todayCount = 0;
-    }
-    stored.todayCount = (stored.todayCount || 0) + 1;
-    saveStored();
-
-    if (stored.todayCount >= 3) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(function(result) {
-        if (result.outcome === 'accepted') {
-          stored.installed = true;
-        } else {
-          stored.dismissed = true;
-        }
-        saveStored();
-        deferredPrompt = null;
-      });
-    }
-  });
-
-  window.addEventListener('appinstalled', function() {
-    stored.installed = true;
-    saveStored();
-  });
-})();
-</script>
     <div id="dev-tools-container" style="position: fixed; bottom: 24px; left: 24px; z-index: 9999; display: none; flex-direction: column-reverse; align-items: flex-start; gap: 10px; direction: rtl;">
     <button id="dev-toggle-btn" style="width: 44px; height: 44px; border-radius: 50%; background: #374151; color: white; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; transition: transform 0.2s ease, background 0.2s ease; user-select: none;">
     🛠️
