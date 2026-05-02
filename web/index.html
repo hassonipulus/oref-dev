@@ -1947,7 +1947,71 @@ refreshUserLocationMarkerIcon = function() {
   document.addEventListener('app:locationChanged', function() {
     if (isFollowModeActive()) maybeFollowUserLocation(false);
   });
+   
+  document.addEventListener('keydown', function(e) {
+    // Ignore hotkeys if the user is typing in the search box
+    if (e.target.tagName === 'INPUT') return;
 
+    switch(e.key.toLowerCase()) {
+      case 'm': 
+        e.preventDefault();
+        toggleMenu(); 
+        break;
+        
+      case 'l': 
+        e.preventDefault();
+        requestUserLocation(); 
+        break;
+        
+      case 'r': 
+        e.preventDefault();
+        // Tactical Reset: Snaps back to default view
+        isZoomingProgrammatically = true;
+        map.flyTo({ 
+          center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], 
+          zoom: DEFAULT_ZOOM, 
+          bearing: 0, 
+          pitch: 0 
+        });
+        map.once('moveend', function() { isZoomingProgrammatically = false; });
+        break;
+
+      case '=':
+      case '+': 
+        e.preventDefault();
+        map.zoomIn(); 
+        break;
+
+      case '-':
+      case '_': 
+        e.preventDefault();
+        map.zoomOut(); 
+        break;
+    }
+
+    // Standard UI Controls
+    if (e.key === 'Escape') {
+      if (menuOpen) {
+        if (soundSubPanelOpen) { closeSoundSubPanel(); } 
+        else { closeMenu(); popPanelHistory(); }
+      }
+      document.dispatchEvent(new CustomEvent('app:escape'));
+      if (unifiedPanelState === 'full' && selectedLocation) {
+        deselectLocation();
+      } else if (unifiedPanelState !== 'closed') {
+        closeTimelinePanel();
+        popPanelHistory();
+      }
+    }
+    
+    // Timeline Navigation
+    if (unifiedPanelState !== 'closed' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+      e.preventDefault();
+      var btn = e.key === 'ArrowLeft' ? document.getElementById('tl-next') : document.getElementById('tl-prev');
+      if (btn) btn.click();
+    }
+  });
+   
   menuZoomEl.querySelector('.menu-item-row').addEventListener('click', function() {
     if (drivingModeFeatureEnabled) {
       showToast('זום אוטומטי אינו זמין במצב נהיגה');
