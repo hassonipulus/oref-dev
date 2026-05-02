@@ -1420,6 +1420,7 @@ function apiFetch(endpoint) {
   var userLocationMarker = null;
   var currentUserLatLng = null;
   var requestUserLocation = function(cb) { if (cb) cb(false); };
+  window.requestUserLocation = requestUserLocation;
   var refreshUserLocationMarkerIcon = function() {};
   var STORED_POSITION_COOKIE = 'oref-stored-my-position';
 
@@ -2186,6 +2187,7 @@ function todayDateStr() {
       openMenu();
     }
   }
+  window.toggleMenu = toggleMenu;
 
   menuBtn.addEventListener('click', function(e) {
     e.stopPropagation();
@@ -4980,19 +4982,24 @@ window.addEventListener('keydown', function(e) {
         e.preventDefault();
         requestUserLocation();
     } 
-    else if (key === 'r') {
+   else if (key === 'r') {
         e.preventDefault();
         console.log("Tactical Reset Triggered");
         isZoomingProgrammatically = true;
+        
+        // Using hardcoded fallback values if the variables aren't global
+        const center = (typeof DEFAULT_CENTER !== 'undefined') ? [DEFAULT_CENTER[1], DEFAULT_CENTER[0]] : [34.9, 32.2];
+        const zoom = (typeof DEFAULT_ZOOM !== 'undefined') ? DEFAULT_ZOOM : 7.2;
+
         map.flyTo({ 
-            center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], 
-            zoom: DEFAULT_ZOOM, 
+            center: center, 
+            zoom: zoom, 
             bearing: 0, 
             pitch: 0 
         });
         setTimeout(() => { isZoomingProgrammatically = false; }, 1000);
-    } 
-    else if (key === '=' || key === '+') {
+    }
+      else if (key === '=' || key === '+') {
         e.preventDefault();
         map.zoomIn();
     } 
@@ -5014,19 +5021,20 @@ window.addEventListener('keydown', function(e) {
         if (unifiedPanelState === 'full' && selectedLocation) {
             deselectLocation();
         } else if (unifiedPanelState !== 'closed') {
-            closeUnifiedPanel(); // Changed from closeTimelinePanel for better unified behavior
+            closeUnifiedPanel(); 
             popPanelHistory();
         }
         document.getElementById('errorDetail').style.display = 'none';
     }
 
-    // --- Timeline Navigation (Arrows) ---
+    // --- Timeline Navigation (Arrows - Reversed for RTL) ---
     if (unifiedPanelState !== 'closed' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
         e.preventDefault();
-        var btn = e.key === 'ArrowLeft' ? document.getElementById('tl-next') : document.getElementById('tl-prev');
+        // Logical flip: Right is forward, Left is back
+        var btn = (e.key === 'ArrowRight') ? document.getElementById('tl-next') : document.getElementById('tl-prev');
         if (btn) btn.click();
     }
-}, true); // High-priority capture phase
+}, true);
    
 </script>
 
