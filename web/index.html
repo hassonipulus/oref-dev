@@ -1948,70 +1948,6 @@ refreshUserLocationMarkerIcon = function() {
     if (isFollowModeActive()) maybeFollowUserLocation(false);
   });
    
-  document.addEventListener('keydown', function(e) {
-    // Ignore hotkeys if the user is typing in the search box
-    if (e.target.tagName === 'INPUT') return;
-
-    switch(e.key.toLowerCase()) {
-      case 'm': 
-        e.preventDefault();
-        toggleMenu(); 
-        break;
-        
-      case 'l': 
-        e.preventDefault();
-        requestUserLocation(); 
-        break;
-        
-      case 'r': 
-        e.preventDefault();
-        // Tactical Reset: Snaps back to default view
-        isZoomingProgrammatically = true;
-        map.flyTo({ 
-          center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], 
-          zoom: DEFAULT_ZOOM, 
-          bearing: 0, 
-          pitch: 0 
-        });
-        map.once('moveend', function() { isZoomingProgrammatically = false; });
-        break;
-
-      case '=':
-      case '+': 
-        e.preventDefault();
-        map.zoomIn(); 
-        break;
-
-      case '-':
-      case '_': 
-        e.preventDefault();
-        map.zoomOut(); 
-        break;
-    }
-
-    // Standard UI Controls
-    if (e.key === 'Escape') {
-      if (menuOpen) {
-        if (soundSubPanelOpen) { closeSoundSubPanel(); } 
-        else { closeMenu(); popPanelHistory(); }
-      }
-      document.dispatchEvent(new CustomEvent('app:escape'));
-      if (unifiedPanelState === 'full' && selectedLocation) {
-        deselectLocation();
-      } else if (unifiedPanelState !== 'closed') {
-        closeTimelinePanel();
-        popPanelHistory();
-      }
-    }
-    
-    // Timeline Navigation
-    if (unifiedPanelState !== 'closed' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
-      e.preventDefault();
-      var btn = e.key === 'ArrowLeft' ? document.getElementById('tl-next') : document.getElementById('tl-prev');
-      if (btn) btn.click();
-    }
-  });
-   
   menuZoomEl.querySelector('.menu-item-row').addEventListener('click', function() {
     if (drivingModeFeatureEnabled) {
       showToast('זום אוטומטי אינו זמין במצב נהיגה');
@@ -5025,6 +4961,73 @@ function processEntries(entries) {
 init();
   _extInitDone = true;
   _maybeDispatchReady();
+
+window.addEventListener('keydown', function(e) {
+    // 1. Log the key to the console for debugging
+    console.log("Key pressed:", e.key);
+
+    // 2. Ignore hotkeys if typing in a search box
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+    const key = e.key.toLowerCase();
+
+    // --- Tactical Hotkeys ---
+    if (key === 'm') {
+        e.preventDefault();
+        toggleMenu();
+    } 
+    else if (key === 'l') {
+        e.preventDefault();
+        requestUserLocation();
+    } 
+    else if (key === 'r') {
+        e.preventDefault();
+        console.log("Tactical Reset Triggered");
+        isZoomingProgrammatically = true;
+        map.flyTo({ 
+            center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], 
+            zoom: DEFAULT_ZOOM, 
+            bearing: 0, 
+            pitch: 0 
+        });
+        setTimeout(() => { isZoomingProgrammatically = false; }, 1000);
+    } 
+    else if (key === '=' || key === '+') {
+        e.preventDefault();
+        map.zoomIn();
+    } 
+    else if (key === '-' || key === '_') {
+        e.preventDefault();
+        map.zoomOut();
+    }
+
+    // --- Escape Key (Close Menus/Panels) ---
+    if (e.key === 'Escape') {
+        if (menuOpen) {
+            if (soundSubPanelOpen) {
+                closeSoundSubPanel();
+            } else {
+                closeMenu();
+                popPanelHistory();
+            }
+        }
+        if (unifiedPanelState === 'full' && selectedLocation) {
+            deselectLocation();
+        } else if (unifiedPanelState !== 'closed') {
+            closeUnifiedPanel(); // Changed from closeTimelinePanel for better unified behavior
+            popPanelHistory();
+        }
+        document.getElementById('errorDetail').style.display = 'none';
+    }
+
+    // --- Timeline Navigation (Arrows) ---
+    if (unifiedPanelState !== 'closed' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        e.preventDefault();
+        var btn = e.key === 'ArrowLeft' ? document.getElementById('tl-next') : document.getElementById('tl-prev');
+        if (btn) btn.click();
+    }
+}, true); // High-priority capture phase
+   
 </script>
 
     <div id="dev-tools-container" style="position: fixed; bottom: 24px; left: 24px; z-index: 9999; display: none; flex-direction: column-reverse; align-items: flex-start; gap: 10px; direction: rtl;">
