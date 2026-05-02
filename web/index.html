@@ -51,6 +51,21 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
 @keyframes tapHintFade { 0%,70% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes toastFade { 0%,75% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+@keyframes radarPing {
+  0% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.9); background: #06b6d4; }
+  70% { box-shadow: 0 0 0 24px rgba(6, 182, 212, 0); background: #3b82f6; }
+  100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); background: #3b82f6; }
+}
+
+.radar-beacon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: #3b82f6;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  animation: radarPing 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
 
 #site-logo { position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 1000; pointer-events: none; }
 
@@ -1456,17 +1471,14 @@ function apiFetch(endpoint) {
     var LOCATION_PREF_KEY = 'oref-show-user-location';
     var LOCATION_HIDDEN_KEY = 'oref-location-hidden';
 
-   function makeUserLocationDotEl() {
+function makeUserLocationDotEl() {
       var el = document.createElement('div');
-      el.style.cssText = 'width:20px;height:20px;display:flex;align-items:center;justify-content:center;';
-      el.innerHTML = `
-        <style>
-          @keyframes tacticalBreathe {
-            0% { box-shadow: 0 0 3px rgba(59, 130, 246, 0.5), 0 0 0 0 rgba(14, 165, 233, 0.3); background: #3b82f6; }
-            50% { box-shadow: 0 0 6px rgba(14, 165, 233, 0.6), 0 0 0 6px rgba(14, 165, 233, 0); background: #0ea5e9; }
-            100% { box-shadow: 0 0 3px rgba(59, 130, 246, 0.5), 0 0 0 0 rgba(59, 130, 246, 0); background: #3b82f6; }
-          }
-        </style>
+      el.style.cssText = 'width:24px;height:24px;display:flex;align-items:center;justify-content:center;';
+      el.innerHTML = '<span class="radar-beacon"></span>';
+      return el;
+    }
+     
+     </style>
         <span style="display:block;width:14px;height:14px;border:2px solid #fff;border-radius:50%;animation: tacticalBreathe 3s ease-in-out infinite;"></span>
       `;
       return el;
@@ -1486,18 +1498,24 @@ function apiFetch(endpoint) {
       return drivingModeFeatureEnabled ? makeUserLocationCarEl() : makeUserLocationDotEl();
     }
 
-    refreshUserLocationMarkerIcon = function() {
+refreshUserLocationMarkerIcon = function() {
       if (!userLocationMarker) return;
       var el = userLocationMarker.getElement();
       var newEl = makeUserLocationEl();
-      el.innerHTML = newEl.innerHTML;
-      el.style.cssText = newEl.style.cssText;
-      // Re-apply position after DOM change — same fix as PR #151;
-      // changing the element's size can cause MapLibre to misplace it at (0,0).
+      
+      // 🚨 THE FIX: Only overwrite the HTML if the icon ACTUALLY needs to change 
+      // (like switching to the Car icon for driving mode). 
+      // If you don't block this, the GPS updates will constantly reset the CSS animation!
+      if (el.innerHTML !== newEl.innerHTML) {
+        el.innerHTML = newEl.innerHTML;
+        el.style.cssText = newEl.style.cssText;
+      }
+      
+      // Re-apply position after DOM change
       var _m = userLocationMarker, _ll = _m.getLngLat();
       requestAnimationFrame(function() { if (_m === userLocationMarker) _m.setLngLat(_ll); });
     };
-
+    
     function shouldRestoreUserLocation() {
       try {
         var stored = localStorage.getItem(LOCATION_PREF_KEY);
