@@ -1309,44 +1309,35 @@ function apiFetch(endpoint) {
       }
     });
 
-    // 🚨 LAYER 2: The Neon Core (Thin and sharp)
-    map.addLayer({
-      id: 'alerts-stroke',
-      type: 'line',
-      source: 'alerts-source',
-      paint: {
-        'line-color': ['coalesce', ['feature-state', 'lineColor'], '#aaaaaa'],
-        'line-opacity': ['coalesce', ['feature-state', 'lineOpacity'], 0], 
-        'line-width': 1.5 
-      }
-    });
-
-    // 🚨 UPGRADED NEON BREATHING ENGINE (Aggressive Radar Pulse)
-    function renderNeonBreathing(timestamp) {
-      if (!map.getLayer('alerts-glow')) return; 
-
-      // 1. The Math: Using absolute sine creates a sharp "heartbeat" spike rather than a soft wave
-      var pulseMath = Math.abs(Math.sin(timestamp / 350)); 
-      
-      // 2. The Flare: Base width of 4px, but spikes aggressively up to 24px!
-      var pulseWidth = 4 + (pulseMath * 20); 
-      
-      // 3. The Blur: Gets heavily blurred as it expands, creating a true "glowing gas" effect
-      var pulseBlur = 4 + (pulseMath * 12);
-      
-      // 4. Inject it into the GPU 60 times a second
-      map.setPaintProperty('alerts-glow', 'line-width', pulseWidth);
-      map.setPaintProperty('alerts-glow', 'line-blur', pulseBlur);
-      
-      // Optional: Make the inner hard line pulse slightly too for extra impact
-      map.setPaintProperty('alerts-stroke', 'line-width', 1.5 + (pulseMath * 1.5));
-
-      requestAnimationFrame(renderNeonBreathing);
+// Safety Check: Only add layers if they don't already exist
+    if (!map.getLayer('alerts-glow')) {
+        map.addLayer({
+            id: 'alerts-glow',
+            type: 'line',
+            source: 'alerts-source',
+            paint: {
+                'line-color': ['coalesce', ['feature-state', 'lineColor'], 'transparent'],
+                'line-opacity': ['coalesce', ['feature-state', 'lineOpacity'], 0],
+                'line-width': 8,
+                'line-blur': 6
+            }
+        });
     }
-    requestAnimationFrame(renderNeonBreathing);
 
-
-    map.on('click', 'alerts-hit', function(e) {
+    if (!map.getLayer('alerts-stroke')) {
+        map.addLayer({
+            id: 'alerts-stroke',
+            type: 'line',
+            source: 'alerts-source',
+            paint: {
+                'line-color': ['coalesce', ['feature-state', 'lineColor'], '#aaaaaa'],
+                'line-opacity': ['coalesce', ['feature-state', 'lineOpacity'], 0],
+                'line-width': 1.5
+            }
+        });
+    }
+       
+       map.on('click', 'alerts-hit', function(e) {
       if (menuOpen || drivingModeFeatureEnabled) return;
       e.originalEvent.stopPropagation();
       
