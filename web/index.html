@@ -51,7 +51,7 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
 @keyframes tapHintFade { 0%,70% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes toastFade { 0%,75% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-/* 🎯 UNKILLABLE RADAR PING */
+/* 🎯 ULTIMATE RADAR PING (Large Container Method) */
 @keyframes absoluteRadar {
   0% { 
     width: 14px; 
@@ -72,30 +72,35 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 60px;  /* 🚨 The container is now physically 60x60 */
+  height: 60px; 
+  pointer-events: none; /* Let clicks pass through the invisible parts */
+}
+
+/* The Solid Blue Core */
+.radar-beacon::before {
+  content: "";
+  position: absolute;
   width: 14px;
   height: 14px;
-  background: #3b82f6; /* Solid Blue Core */
+  background: #3b82f6; 
   border: 2px solid #fff;
   border-radius: 50%;
   z-index: 10;
 }
 
-/* The expanding wave is attached directly to the dot, completely ignoring the container */
+/* The Expanding Cyan Wave */
 .radar-beacon::after {
   content: "";
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   border-radius: 50%;
   border-style: solid;
-  border-color: #0ea5e9; /* Cyan Wave */
+  border-color: #0ea5e9; 
   box-sizing: border-box;
   animation: absoluteRadar 2s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
-  pointer-events: none;
   z-index: 1;
 }
-   
+
 #site-logo { position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 1000; pointer-events: none; }
 
 /* =========================================
@@ -1500,11 +1505,11 @@ function apiFetch(endpoint) {
     var LOCATION_PREF_KEY = 'oref-show-user-location';
     var LOCATION_HIDDEN_KEY = 'oref-location-hidden';
 
-function makeUserLocationDotEl() {
+   function makeUserLocationDotEl() {
       var el = document.createElement('div');
       
-      // 🚨 CRITICAL: 'overflow: visible' prevents MapLibre from cutting off the expanding wave!
-      el.style.cssText = 'width: 14px; height: 14px; overflow: visible !important;';
+      // 🚨 The outer MapLibre container MUST match the 60x60 CSS size
+      el.style.cssText = 'width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;';
       
       el.innerHTML = '<div class="radar-beacon"></div>';
       return el;
