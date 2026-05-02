@@ -1735,9 +1735,7 @@ function apiFetch(endpoint) {
     null, true
   );
 
-
-  var PMTILES_URL = 'pmtiles://https://build.protomaps.com/20240419.pmtiles';
-
+  var PMTILES_URL = 'pmtiles://https://data.source.coop/protomaps/openstreetmap/tiles/v3.pmtiles';
   var MAP_STYLE = buildMapStyle(isDarkActive, currentLang);
 
   var map = new maplibregl.Map({
