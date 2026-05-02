@@ -51,56 +51,15 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
 @keyframes tapHintFade { 0%,70% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes toastFade { 0%,75% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-/* 🎯 ULTIMATE RADAR PING (Large Container Method) */
-@keyframes absoluteRadar {
-  0% { 
-    width: 14px; 
-    height: 14px; 
-    opacity: 1; 
-    border-width: 4px; 
-  }
-  100% { 
-    width: 60px; 
-    height: 60px; 
-    opacity: 0; 
-    border-width: 0px; 
-  }
+.blue-dot { 
+  display: inline-block; 
+  width: 12px; 
+  height: 12px; 
+  background: #4285F4; 
+  border: 2px solid #fff; 
+  border-radius: 50%; 
+  box-shadow: 0 0 4px rgba(66,133,244,0.5); 
 }
-
-.radar-beacon {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 60px;  /* 🚨 The container is now physically 60x60 */
-  height: 60px; 
-  pointer-events: none; /* Let clicks pass through the invisible parts */
-}
-
-/* The Solid Blue Core */
-.radar-beacon::before {
-  content: "";
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  background: #3b82f6; 
-  border: 2px solid #fff;
-  border-radius: 50%;
-  z-index: 10;
-}
-
-/* The Expanding Cyan Wave */
-.radar-beacon::after {
-  content: "";
-  position: absolute;
-  border-radius: 50%;
-  border-style: solid;
-  border-color: #0ea5e9; 
-  box-sizing: border-box;
-  animation: absoluteRadar 2s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
-  z-index: 1;
-}
-
 #site-logo { position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 1000; pointer-events: none; }
 
 /* =========================================
@@ -1507,11 +1466,8 @@ function apiFetch(endpoint) {
 
    function makeUserLocationDotEl() {
       var el = document.createElement('div');
-      
-      // 🚨 The outer MapLibre container MUST match the 60x60 CSS size
-      el.style.cssText = 'width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;';
-      
-      el.innerHTML = '<div class="radar-beacon"></div>';
+      el.style.cssText = 'width:20px;height:20px;display:flex;align-items:center;justify-content:center;';
+      el.innerHTML = '<span style="display:block;width:14px;height:14px;background:#4285F4;border:3px solid #fff;border-radius:50%;box-shadow:0 0 6px rgba(66,133,244,0.6);"></span>';
       return el;
     }
      
@@ -1533,20 +1489,13 @@ refreshUserLocationMarkerIcon = function() {
       if (!userLocationMarker) return;
       var el = userLocationMarker.getElement();
       var newEl = makeUserLocationEl();
+      el.innerHTML = newEl.innerHTML;
+      el.style.cssText = newEl.style.cssText;
       
-      // 🚨 THE FIX: Only overwrite the HTML if the icon ACTUALLY needs to change 
-      // (like switching to the Car icon for driving mode). 
-      // If you don't block this, the GPS updates will constantly reset the CSS animation!
-      if (el.innerHTML !== newEl.innerHTML) {
-        el.innerHTML = newEl.innerHTML;
-        el.style.cssText = newEl.style.cssText;
-      }
-      
-      // Re-apply position after DOM change
       var _m = userLocationMarker, _ll = _m.getLngLat();
       requestAnimationFrame(function() { if (_m === userLocationMarker) _m.setLngLat(_ll); });
-    };
-    
+    };      
+
     function shouldRestoreUserLocation() {
       try {
         var stored = localStorage.getItem(LOCATION_PREF_KEY);
@@ -4724,33 +4673,6 @@ function processEntries(entries) {
     localStorage.setItem('tapHintShown', '1');
     hint.addEventListener('animationend', function() { hint.remove(); });
   }
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      if (menuOpen) {
-        if (soundSubPanelOpen) {
-          closeSoundSubPanel();
-        } else {
-          closeMenu();
-          popPanelHistory();
-        }
-      }
-      document.dispatchEvent(new CustomEvent('app:escape'));
-      // Unified panel: Full→Slim→Closed
-      if (unifiedPanelState === 'full' && selectedLocation) {
-        deselectLocation();
-      } else if (unifiedPanelState !== 'closed') {
-        closeTimelinePanel();
-        popPanelHistory();
-      }
-      document.getElementById('errorDetail').style.display = 'none';
-    }
-    // Arrow keys: prev/next event when timeline is open
-    if (unifiedPanelState !== 'closed' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
-      e.preventDefault();
-      var btn = e.key === 'ArrowLeft' ? document.getElementById('tl-next') : document.getElementById('tl-prev');
-      if (btn) btn.click();
-    }
-  });
 
   // --- Sound control (in menu) ---
   var soundSearch = document.getElementById('sound-search');
