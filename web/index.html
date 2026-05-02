@@ -1296,19 +1296,6 @@ function apiFetch(endpoint) {
       paint: { 'fill-opacity': 0, 'fill-color': 'transparent' }
     });
 
-    // 🚨 LAYER 1: The Neon Glow
-    map.addLayer({
-      id: 'alerts-glow',
-      type: 'line',
-      source: 'alerts-source',
-      paint: {
-        'line-color': ['coalesce', ['feature-state', 'lineColor'], 'transparent'],
-        'line-opacity': ['coalesce', ['feature-state', 'lineOpacity'], 0], 
-        'line-width': 8,
-        'line-blur': 6
-      }
-    });
-
 // Safety Check: Only add layers if they don't already exist
     if (!map.getLayer('alerts-glow')) {
         map.addLayer({
