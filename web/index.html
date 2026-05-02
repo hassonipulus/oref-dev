@@ -45,41 +45,14 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
 .maplibregl-ctrl-group button:last-child { border-radius: 0 0 6px 6px !important; }
 .maplibregl-ctrl-group button .maplibregl-ctrl-icon { opacity: 0.7; }
 
-
 /* =========================================
    2. GLOBAL UI COMPONENTS & ANIMATIONS
 ========================================= */
 @keyframes tapHintFade { 0%,70% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes toastFade { 0%,75% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-/* 📍 Active GPS Tracking Ping (Subtle Breathing) */
-@keyframes cyanBreathe {
-  0% {
-    background: #3b82f6; /* Base Blue */
-    box-shadow: 0 0 3px rgba(59, 130, 246, 0.5), 0 0 0 0 rgba(14, 165, 233, 0.3);
-  }
-  50% {
-    background: #0ea5e9; /* Softer Sky-Cyan */
-    box-shadow: 0 0 6px rgba(14, 165, 233, 0.6), 0 0 0 6px rgba(14, 165, 233, 0); /* Smaller, softer ripple */
-  }
-  100% {
-    background: #3b82f6;
-    box-shadow: 0 0 3px rgba(59, 130, 246, 0.5), 0 0 0 0 rgba(59, 130, 246, 0);
-  }
-}
-
-.blue-dot { 
-  display: inline-block; 
-  width: 14px; 
-  height: 14px; 
-  background: #3b82f6; 
-  border: 2px solid #fff; 
-  border-radius: 50%; 
-  animation: cyanBreathe 3s ease-in-out infinite; 
-}
 
 #site-logo { position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 1000; pointer-events: none; }
-
 
 /* =========================================
    3. STATUS BOX (TOP LEFT)
@@ -1486,9 +1459,18 @@ function apiFetch(endpoint) {
    function makeUserLocationDotEl() {
       var el = document.createElement('div');
       el.style.cssText = 'width:20px;height:20px;display:flex;align-items:center;justify-content:center;';
-      el.innerHTML = '<span class="blue-dot"></span>';
+      el.innerHTML = `
+        <style>
+          @keyframes tacticalBreathe {
+            0% { box-shadow: 0 0 3px rgba(59, 130, 246, 0.5), 0 0 0 0 rgba(14, 165, 233, 0.3); background: #3b82f6; }
+            50% { box-shadow: 0 0 6px rgba(14, 165, 233, 0.6), 0 0 0 6px rgba(14, 165, 233, 0); background: #0ea5e9; }
+            100% { box-shadow: 0 0 3px rgba(59, 130, 246, 0.5), 0 0 0 0 rgba(59, 130, 246, 0); background: #3b82f6; }
+          }
+        </style>
+        <span style="display:block;width:14px;height:14px;border:2px solid #fff;border-radius:50%;animation: tacticalBreathe 3s ease-in-out infinite;"></span>
+      `;
       return el;
-    }
+    }     
      
      function makeUserLocationCarEl() {
       var el = document.createElement('div');
