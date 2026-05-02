@@ -2194,57 +2194,52 @@ function todayDateStr() {
     toggleMenu();
   });
 
-   // --- Integrated Hotkeys (Placed inside the function scope) ---
+// --- RTL Tactical Controls ---
 document.addEventListener('keydown', function(e) {
-    // Ignore if typing in an input
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
     const key = e.key.toLowerCase();
 
-    // Mapping keys to the functions we now know are working
-    if (key === 'm') {
+    // 1. Tactical Reset (R)
+    if (key === 'r') {
         e.preventDefault();
-        toggleMenu(); 
+        if (typeof map !== 'undefined') {
+            map.flyTo({ 
+                center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], 
+                zoom: DEFAULT_ZOOM, 
+                bearing: 0, 
+                pitch: 0 
+            });
+        }
     } 
+    
+    // 2. Toggle Menu (M)
+    else if (key === 'm') {
+        e.preventDefault();
+        // Direct logic check to bypass potential function scope issues
+        if (typeof toggleMenu === 'function') {
+            toggleMenu();
+        } else if (typeof menuOpen !== 'undefined') {
+            // Fallback: Manually trigger if function isn't visible
+            menuOpen ? closeMenu() : openMenu();
+        }
+    } 
+
+    // 3. GPS Location (L)
     else if (key === 'l') {
         e.preventDefault();
         if (typeof requestUserLocation === 'function') requestUserLocation();
-    } 
-    else if (key === 'r') {
-        e.preventDefault();
-        // Reset to tactical view
-        map.flyTo({ 
-            center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], 
-            zoom: DEFAULT_ZOOM, 
-            bearing: 0, 
-            pitch: 0 
-        });
-    }
-    else if (key === '=' || key === '+') {
-        e.preventDefault();
-        map.zoomIn();
-    } 
-    else if (key === '-' || key === '_') {
-        e.preventDefault();
-        map.zoomOut();
-    }
-    
-    // Escape Key logic
-    if (e.key === 'Escape') {
-        if (typeof menuOpen !== 'undefined' && menuOpen) {
-            closeMenu();
-        } else if (typeof unifiedPanelState !== 'undefined' && unifiedPanelState !== 'closed') {
-            closeUnifiedPanel();
-        }
     }
 
-    // RTL Reversed Arrows
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    // 4. RTL Timeline Navigation (REVERSED)
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
         e.preventDefault();
-        var btn = (e.key === 'ArrowRight') ? document.getElementById('tl-next') : document.getElementById('tl-prev');
+        // In RTL, Right moves to 'Next' (Forward), Left moves to 'Prev' (Back)
+        const btnId = (e.key === 'ArrowRight') ? 'tl-next' : 'tl-prev';
+        const btn = document.getElementById(btnId);
         if (btn) btn.click();
     }
-});
+}, true);
    
   // --- Shared oref_points.json loader (used by extension modules) ---
   var _orefPoints = null;
