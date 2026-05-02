@@ -51,20 +51,39 @@ body.has-overlay .maplibregl-canvas-container.maplibregl-interactive { pointer-e
 @keyframes tapHintFade { 0%,70% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes toastFade { 0%,75% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-@keyframes radarPing {
-  0% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.9); background: #06b6d4; }
-  70% { box-shadow: 0 0 0 24px rgba(6, 182, 212, 0); background: #3b82f6; }
-  100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); background: #3b82f6; }
+/* 🎯 Aggressive Hardware-Accelerated Radar Ping */
+@keyframes radarWave {
+  0% { transform: scale(1); opacity: 0.9; }
+  100% { transform: scale(4.5); opacity: 0; }
 }
 
-.radar-beacon {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  background: #3b82f6;
+.radar-container {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radar-core {
+  width: 14px;
+  height: 14px;
+  background: #3b82f6; /* Blue Core */
   border: 2px solid #fff;
   border-radius: 50%;
-  animation: radarPing 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  z-index: 2;
+  position: relative;
+}
+
+.radar-ring {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #06b6d4; /* Cyan Ring */
+  border-radius: 50%;
+  z-index: 1;
+  animation: radarWave 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
 }
 
 #site-logo { position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 1000; pointer-events: none; }
@@ -1474,10 +1493,16 @@ function apiFetch(endpoint) {
 function makeUserLocationDotEl() {
       var el = document.createElement('div');
       el.style.cssText = 'width:24px;height:24px;display:flex;align-items:center;justify-content:center;';
-      el.innerHTML = '<span class="radar-beacon"></span>';
+      
+      // Inject the multi-layer radar structure
+      el.innerHTML = `
+        <div class="radar-container">
+          <div class="radar-ring"></div>
+          <div class="radar-core"></div>
+        </div>
+      `;
       return el;
     }
-     
      </style>
         <span style="display:block;width:14px;height:14px;border:2px solid #fff;border-radius:50%;animation: tacticalBreathe 3s ease-in-out infinite;"></span>
       `;
