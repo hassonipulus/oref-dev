@@ -745,8 +745,8 @@ try {
           <span id="tl-date-label">📅 בחר תאריך</span>
         </div>
         <button id="tl-date-next" title="יום הבא" style="display: none;">&#9656;</button>
-      </div>        <button id="tl-date-next" title="יום הבא" style="display: none;">&#9656;</button>
-      </div>    </div>
+      </div>
+  </div>
     <div id="timeline-transport">
       <button id="tl-prev" title="אירוע קודם">⏮</button>
       <button id="tl-play" title="נגן/עצור">▶</button>
@@ -4963,57 +4963,6 @@ function processEntries(entries) {
 init();
   _extInitDone = true;
   _maybeDispatchReady();
-
-       
-   // Use 'window' and 'true' (Capture Phase) to ensure this runs first
-window.addEventListener('keydown', function(e) {
-    const key = e.key.toLowerCase();
-    
-    // Ignore if typing
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-
-    // 1. Menu Toggle (M)
-    if (key === 'm') {
-        e.preventDefault();
-        e.stopImmediatePropagation(); // Prevents other scripts from seeing this press
-        console.log("Hotkeys: Triggering Menu");
-        if (typeof toggleMenu === 'function') toggleMenu();
-    }
-
-    // 2. Location (L)
-    else if (key === 'l') {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        console.log("Hotkeys: Triggering Location");
-        if (typeof requestUserLocation === 'function') requestUserLocation();
-    }
-
-    // 3. Tactical Reset (R)
-    else if (key === 'r') {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        console.log("Hotkeys: Triggering Reset");
-        if (typeof map !== 'undefined') {
-            map.flyTo({ 
-                center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], 
-                zoom: DEFAULT_ZOOM, 
-                bearing: 0, 
-                pitch: 0 
-            });
-        }
-    }
-
-    // 4. RTL Navigation (Right = Next, Left = Prev)
-    else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        const btnId = (e.key === 'ArrowRight') ? 'tl-next' : 'tl-prev';
-        const btn = document.getElementById(btnId);
-        if (btn) btn.click();
-        console.log("Hotkeys: Navigating Timeline " + btnId);
-    }
-}, true); // The 'true' here is the Capture Phase - it is mandatory.
-   </script>
 </script>
 
     <div id="dev-tools-container" style="position: fixed; bottom: 24px; left: 24px; z-index: 9999; display: none; flex-direction: column-reverse; align-items: flex-start; gap: 10px; direction: rtl;">
@@ -5178,6 +5127,71 @@ window.addEventListener('keydown', function(e) {
           desc: "ניתן לצאת מהמרחב המוגן"
       });
   });
+</script>
+<script>
+(function() {
+    console.log("Tactical Hotkey System: INITIALIZED");
 
+    window.addEventListener('keydown', function(e) {
+        // 1. Log EVERY keypress to verify the listener is alive
+        console.log("Raw Key Detected:", e.key);
+
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        const key = e.key.toLowerCase();
+
+        // Menu Toggle
+        if (key === 'm') {
+            e.preventDefault();
+            console.log("Action: Attempting ToggleMenu");
+            if (typeof toggleMenu === 'function') {
+                toggleMenu();
+            } else {
+                console.error("Function 'toggleMenu' not found in global scope.");
+            }
+        }
+
+        // Location Snap
+        if (key === 'l') {
+            e.preventDefault();
+            console.log("Action: Attempting Location Snap");
+            if (typeof requestUserLocation === 'function') {
+                requestUserLocation();
+            } else {
+                console.error("Function 'requestUserLocation' not found.");
+            }
+        }
+
+        // Tactical Reset
+        if (key === 'r') {
+            e.preventDefault();
+            console.log("Action: Resetting Map");
+            if (typeof map !== 'undefined' && typeof DEFAULT_CENTER !== 'undefined') {
+                map.flyTo({ 
+                    center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], 
+                    zoom: DEFAULT_ZOOM, 
+                    bearing: 0, 
+                    pitch: 0 
+                });
+            } else {
+                console.error("Map or DEFAULT_CENTER variables not accessible.");
+            }
+        }
+
+        // RTL Navigation (Right = Next, Left = Prev)
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+            e.preventDefault();
+            const btnId = (e.key === 'ArrowRight') ? 'tl-next' : 'tl-prev';
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                console.log("Action: Navigating to", btnId);
+                btn.click();
+            } else {
+                console.warn("Navigation button not found:", btnId);
+            }
+        }
+    }, true);
+})();
+</script>
 </body>
 </html>
