@@ -2193,53 +2193,6 @@ function todayDateStr() {
     e.stopPropagation();
     toggleMenu();
   });
-
-// --- RTL Tactical Controls ---
-document.addEventListener('keydown', function(e) {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-
-    const key = e.key.toLowerCase();
-
-    // 1. Tactical Reset (R)
-    if (key === 'r') {
-        e.preventDefault();
-        if (typeof map !== 'undefined') {
-            map.flyTo({ 
-                center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], 
-                zoom: DEFAULT_ZOOM, 
-                bearing: 0, 
-                pitch: 0 
-            });
-        }
-    } 
-    
-    // 2. Toggle Menu (M)
-    else if (key === 'm') {
-        e.preventDefault();
-        // Direct logic check to bypass potential function scope issues
-        if (typeof toggleMenu === 'function') {
-            toggleMenu();
-        } else if (typeof menuOpen !== 'undefined') {
-            // Fallback: Manually trigger if function isn't visible
-            menuOpen ? closeMenu() : openMenu();
-        }
-    } 
-
-    // 3. GPS Location (L)
-    else if (key === 'l') {
-        e.preventDefault();
-        if (typeof requestUserLocation === 'function') requestUserLocation();
-    }
-
-    // 4. RTL Timeline Navigation (REVERSED)
-    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-        e.preventDefault();
-        // In RTL, Right moves to 'Next' (Forward), Left moves to 'Prev' (Back)
-        const btnId = (e.key === 'ArrowRight') ? 'tl-next' : 'tl-prev';
-        const btn = document.getElementById(btnId);
-        if (btn) btn.click();
-    }
-}, true);
    
   // --- Shared oref_points.json loader (used by extension modules) ---
   var _orefPoints = null;
@@ -5175,6 +5128,54 @@ init();
       });
   });
 
+   // Use 'window' and 'true' (Capture Phase) to ensure this runs first
+window.addEventListener('keydown', function(e) {
+    const key = e.key.toLowerCase();
+    
+    // Ignore if typing
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+    // 1. Menu Toggle (M)
+    if (key === 'm') {
+        e.preventDefault();
+        e.stopImmediatePropagation(); // Prevents other scripts from seeing this press
+        console.log("Hotkeys: Triggering Menu");
+        if (typeof toggleMenu === 'function') toggleMenu();
+    }
+
+    // 2. Location (L)
+    else if (key === 'l') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        console.log("Hotkeys: Triggering Location");
+        if (typeof requestUserLocation === 'function') requestUserLocation();
+    }
+
+    // 3. Tactical Reset (R)
+    else if (key === 'r') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        console.log("Hotkeys: Triggering Reset");
+        if (typeof map !== 'undefined') {
+            map.flyTo({ 
+                center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], 
+                zoom: DEFAULT_ZOOM, 
+                bearing: 0, 
+                pitch: 0 
+            });
+        }
+    }
+
+    // 4. RTL Navigation (Right = Next, Left = Prev)
+    else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        const btnId = (e.key === 'ArrowRight') ? 'tl-next' : 'tl-prev';
+        const btn = document.getElementById(btnId);
+        if (btn) btn.click();
+        console.log("Hotkeys: Navigating Timeline " + btnId);
+    }
+}, true); // The 'true' here is the Capture Phase - it is mandatory.
    </script>
 </body>
 </html>
