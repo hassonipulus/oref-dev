@@ -2194,6 +2194,58 @@ function todayDateStr() {
     toggleMenu();
   });
 
+   // --- Integrated Hotkeys (Placed inside the function scope) ---
+document.addEventListener('keydown', function(e) {
+    // Ignore if typing in an input
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+    const key = e.key.toLowerCase();
+
+    // Mapping keys to the functions we now know are working
+    if (key === 'm') {
+        e.preventDefault();
+        toggleMenu(); 
+    } 
+    else if (key === 'l') {
+        e.preventDefault();
+        if (typeof requestUserLocation === 'function') requestUserLocation();
+    } 
+    else if (key === 'r') {
+        e.preventDefault();
+        // Reset to tactical view
+        map.flyTo({ 
+            center: [DEFAULT_CENTER[1], DEFAULT_CENTER[0]], 
+            zoom: DEFAULT_ZOOM, 
+            bearing: 0, 
+            pitch: 0 
+        });
+    }
+    else if (key === '=' || key === '+') {
+        e.preventDefault();
+        map.zoomIn();
+    } 
+    else if (key === '-' || key === '_') {
+        e.preventDefault();
+        map.zoomOut();
+    }
+    
+    // Escape Key logic
+    if (e.key === 'Escape') {
+        if (typeof menuOpen !== 'undefined' && menuOpen) {
+            closeMenu();
+        } else if (typeof unifiedPanelState !== 'undefined' && unifiedPanelState !== 'closed') {
+            closeUnifiedPanel();
+        }
+    }
+
+    // RTL Reversed Arrows
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        var btn = (e.key === 'ArrowRight') ? document.getElementById('tl-next') : document.getElementById('tl-prev');
+        if (btn) btn.click();
+    }
+});
+   
   // --- Shared oref_points.json loader (used by extension modules) ---
   var _orefPoints = null;
   var _orefPointsPromise = null;
@@ -5128,78 +5180,6 @@ init();
       });
   });
 
-window.addEventListener('keydown', function(e) {
-    // 1. Log the key to the console for debugging
-    console.log("Key pressed:", e.key);
-
-    // 2. Ignore hotkeys if typing in a search box
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-
-    const key = e.key.toLowerCase();
-
-    // --- Tactical Hotkeys ---
-    if (key === 'm') {
-        e.preventDefault();
-        toggleMenu();
-    } 
-    else if (key === 'l') {
-        e.preventDefault();
-        requestUserLocation();
-    } 
-   else if (key === 'r') {
-        e.preventDefault();
-        console.log("Tactical Reset Triggered");
-        isZoomingProgrammatically = true;
-        
-        // Using hardcoded fallback values if the variables aren't global
-        const center = (typeof DEFAULT_CENTER !== 'undefined') ? [DEFAULT_CENTER[1], DEFAULT_CENTER[0]] : [34.9, 32.2];
-        const zoom = (typeof DEFAULT_ZOOM !== 'undefined') ? DEFAULT_ZOOM : 7.2;
-
-        map.flyTo({ 
-            center: center, 
-            zoom: zoom, 
-            bearing: 0, 
-            pitch: 0 
-        });
-        setTimeout(() => { isZoomingProgrammatically = false; }, 1000);
-    }
-      else if (key === '=' || key === '+') {
-        e.preventDefault();
-        map.zoomIn();
-    } 
-    else if (key === '-' || key === '_') {
-        e.preventDefault();
-        map.zoomOut();
-    }
-
-    // --- Escape Key (Close Menus/Panels) ---
-    if (e.key === 'Escape') {
-        if (menuOpen) {
-            if (soundSubPanelOpen) {
-                closeSoundSubPanel();
-            } else {
-                closeMenu();
-                popPanelHistory();
-            }
-        }
-        if (unifiedPanelState === 'full' && selectedLocation) {
-            deselectLocation();
-        } else if (unifiedPanelState !== 'closed') {
-            closeUnifiedPanel(); 
-            popPanelHistory();
-        }
-        document.getElementById('errorDetail').style.display = 'none';
-    }
-
-    // --- Timeline Navigation (Arrows - Reversed for RTL) ---
-    if (unifiedPanelState !== 'closed' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
-        e.preventDefault();
-        // Logical flip: Right is forward, Left is back
-        var btn = (e.key === 'ArrowRight') ? document.getElementById('tl-next') : document.getElementById('tl-prev');
-        if (btn) btn.click();
-    }
-}, true);
-   
-</script>
+   </script>
 </body>
 </html>
