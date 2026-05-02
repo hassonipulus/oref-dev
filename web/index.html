@@ -1735,8 +1735,8 @@ function apiFetch(endpoint) {
     null, true
   );
 
-  var PMTILES_URL = 'pmtiles://https://data.source.coop/protomaps/openstreetmap/tiles/v3.pmtiles';
-  var MAP_STYLE = buildMapStyle(isDarkActive, currentLang);
+var PMTILES_URL = 'pmtiles://https://pmtiles.alprazolam.cfd/middle-east.pmtiles';
+var MAP_STYLE = buildMapStyle(isDarkActive, currentLang);
 
   var map = new maplibregl.Map({
     container: 'map',
@@ -1845,20 +1845,7 @@ function apiFetch(endpoint) {
       requestAnimationFrame(renderNeonBreathing);
     }
     requestAnimationFrame(renderNeonBreathing);
-      
-    map.addLayer({
-      id: 'alerts-stroke',
-      type: 'line',
-      source: 'alerts-source',
-      paint: {
-        'line-color': ['coalesce', ['feature-state', 'lineColor'], '#aaaaaa'],
-        'line-opacity': ['coalesce', ['feature-state', 'lineOpacity'], 0], 
-        // 🚨 Make the line thicker and add a blur to create the neon glow!
-        'line-width': ['coalesce', ['feature-state', 'lineWidth'], 3],
-        'line-blur': 4 
-      }
-    });
-
+    
     map.on('click', 'alerts-hit', function(e) {
       if (menuOpen || drivingModeFeatureEnabled) return;
       e.originalEvent.stopPropagation();
