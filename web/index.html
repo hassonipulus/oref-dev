@@ -3046,33 +3046,31 @@ function openLocationPanel(name) {
   var lastLiveAlertPayload = '';
 
 function processLiveAlert(alert) {
+  var _liveZoomDebounce = null;
+
+  function processLiveAlert(alert) {
     if (!alert || !alert.data || !alert.title) return;
-    
-    // 🚨 2. Remove the strict alert.id check! 
-    // Because we already deduplicate the exact text payload in fetchLiveAlerts,
-    // it is 100% safe to let this process every city in the updated array!
     
     // Combine both title and desc so we don't overwrite the threat type
     var combinedText = (alert.title + ' ' + (alert.desc || '')).replace(/\s+/g, ' ').trim();
     var state = classifyTitle(combinedText);
-    
-    // We still use the clean title for the visual timeline history
     var cleanTitle = alert.title.replace(/\s+/g, ' ').trim();
     
     if (state !== 'green') lastDangerTime = Date.now();
-    var locations = alert.data;
+    
+    // 🚨 BUG 1 FIXED: Force strings into arrays to handle Oref API formatting quirks
+    var locations = Array.isArray(alert.data) ? alert.data : alert.data.split(',').map(function(s) { return s.trim(); });
     
     var d = new Date();
     // Force Jerusalem time safely
     d = new Date(d.toLocaleString("en-US", {timeZone: "Asia/Jerusalem"}));
     var pad = function(n) { return n < 10 ? '0' + n : n; };
-    // Bulletproof YYYY-MM-DD HH:mm:ss format
     var now = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
 
+    // Loop through ALL cities in the alert array and update their state instantly
     for (var i = 0; i < locations.length; i++) {
       var loc = normalizeGeresh(locations[i]);
       
-      // These functions are already smart enough to ignore cities that are already Red
       recordHistory(loc, cleanTitle, now, state);
       
       if (isLiveMode) {
@@ -3082,11 +3080,19 @@ function processLiveAlert(alert) {
       }
     }
     
+    // 🚨 BATCH ZOOM FIX: 
+    // If 5 cities get hit at once, this ensures we only calculate the camera flight ONCE
+    // after a tiny 50ms delay, allowing all polygons to render first.
     if (shouldAutoZoomToEvents() && isLiveMode && !selectedLocation) {
-      maybeZoomToEvent();
+      if (_liveZoomDebounce) clearTimeout(_liveZoomDebounce);
+      _liveZoomDebounce = setTimeout(function() {
+          maybeZoomToEvent();
+      }, 50);
     }
+    
     document.dispatchEvent(new CustomEvent('app:stateChanged'));
   }
+
 
     // Expose for debugging/external injection
   window.injectAlert = function(mockAlert) {
