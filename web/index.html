@@ -3041,12 +3041,9 @@ function openLocationPanel(name) {
       polygonHintTargets = null;
     }
   }
-
-  // --- Process alerts ---
+    // --- Process alerts ---
   var lastLiveAlertPayload = '';
-
-function processLiveAlert(alert) {
-  var _liveZoomDebounce = null;
+  var _liveZoomDebounce = null; // 🚨 MUST be outside the function!
 
   function processLiveAlert(alert) {
     if (!alert || !alert.data || !alert.title) return;
@@ -3093,36 +3090,6 @@ function processLiveAlert(alert) {
     document.dispatchEvent(new CustomEvent('app:stateChanged'));
   }
 
-
-    // Expose for debugging/external injection
-  window.injectAlert = function(mockAlert) {
-    console.log('Injecting mock alert:', mockAlert);
-    processLiveAlert(mockAlert);
-  };
-
-  window.printAlertAllLocations = function() {
-    var active = [];
-    for (var name in locationStates) {
-      if (locationStates[name] && locationStates[name].state !== 'green') {
-        active.push(name);
-      }
-    }
-    active.sort(function(a, b) { return a.localeCompare(b, 'he'); });
-    console.log(JSON.stringify(active));
-    return active;
-  };
-
-  window.printRedAlertLocations = function() {
-    var red = [];
-    for (var name in locationStates) {
-      if (locationStates[name] && locationStates[name].state === 'red') {
-        red.push(name);
-      }
-    }
-    red.sort(function(a, b) { return a.localeCompare(b, 'he'); });
-    console.log(JSON.stringify(red));
-    return red;
-  };
 
   // --- Green fade-out ---
 function fadeGreenMarkers() {
